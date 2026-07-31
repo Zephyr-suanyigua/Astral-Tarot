@@ -25,6 +25,7 @@
       shuffle: "Shuffle",
       shuffling: "Shuffling the deck… focus on your question",
       pickTitle: "Choose by Intuition",
+      pickTip: "Glide across the cards — a card rises as you pass; tap a raised card to claim it.",
       pickHint: (c, n) => "Pick card <b>" + (c + 1) + "</b> &nbsp;·&nbsp; chosen " + c + " / " + n,
       pickDone: n => "All " + n + " chosen — revealing your reading…",
       upright: "Upright", reversed: "Reversed", revShort: "R",
@@ -61,6 +62,7 @@
       shuffle: "洗 牌",
       shuffling: "正在洗牌……凝神于你的问题",
       pickTitle: "凭直觉选牌",
+      pickTip: "手指划过牌面,划到的牌会弹起;再点一下弹起的牌即可选定。",
       pickHint: (c, n) => "请选择第 <b>" + (c + 1) + "</b> 张牌 &nbsp;·&nbsp; 已选 " + c + " / " + n,
       pickDone: n => "已选满 " + n + " 张,正在为你揭示……",
       upright: "正位", reversed: "逆位", revShort: "逆",
@@ -240,19 +242,22 @@
   function startShuffle() {
     show("shuffle");
     const s = scenes.shuffle; s.innerHTML = "";
-    const stageWrap = el("div", "shuffle-wrap");
-    const stage = el("div", "shuffle-stage");
-    for (let i = 0; i < 14; i++) {
-      const c = el("div", "shuffle-card back");
-      c.style.setProperty("--i", i);
-      c.style.setProperty("--r", (rand() * 2 - 1).toFixed(3));
-      stage.appendChild(c);
+    const wrap = el("div", "shuffle-wrap");
+    const stage = el("div", "shuffle3d");
+    const ring = el("div", "ring");
+    const N = 20;
+    for (let i = 0; i < N; i++) {
+      const c = el("div", "ring-card");
+      c.appendChild(ornateBack());
+      c.style.setProperty("--a", (i * (360 / N)).toFixed(2) + "deg");
+      ring.appendChild(c);
     }
-    stageWrap.appendChild(stage);
-    stageWrap.appendChild(el("p", "shuffle-text", t().shuffling));
-    s.appendChild(stageWrap);
-    requestAnimationFrame(() => stage.classList.add("shuffling"));
-    setTimeout(() => { buildDeck(); startPick(); }, 2600);
+    stage.appendChild(ring);
+    wrap.appendChild(stage);
+    wrap.appendChild(el("p", "shuffle-text", t().shuffling));
+    s.appendChild(wrap);
+    requestAnimationFrame(() => stage.classList.add("go"));
+    setTimeout(() => { buildDeck(); startPick(); }, 2900);
   }
   function buildDeck() {
     state.deck = shuffle(CARDS).map(card => ({ card: card, reversed: rand() < 0.5 }));
@@ -281,12 +286,21 @@
     return l;
   }
 
+  function peekCard(card) {
+    if (!card || card === state._peeked) return;
+    if (state._peeked) state._peeked.classList.remove("peek");
+    card.classList.add("peek");
+    state._peeked = card;
+  }
+
   function startPick() {
     show("pick");
     const s = scenes.pick; s.innerHTML = "";
+    state._peeked = null; state._didMove = false; state._suppressClick = false;
     const need = state.spread.count;
     const head = el("div", "pick-head");
     head.appendChild(el("h2", "panel-title", t().pickTitle));
+    head.appendChild(el("p", "pick-tip", t().pickTip));
     const hint = el("p", "pick-hint", ""); head.appendChild(hint);
     s.appendChild(head);
 
@@ -313,9 +327,30 @@
       c.style.setProperty("--delay", (idx * 9) + "ms");
       c.style.setProperty("--float", (rand() * 2 - 1).toFixed(3));
       c.dataset.idx = idx;
-      c.addEventListener("click", () => onPick(c, entry, need, hint, tray));
+      c.addEventListener("click", () => {
+        if (state._suppressClick) { state._suppressClick = false; return; } // 刚才是滑动,不算选中
+        if (c.classList.contains("picked") || state._drawing) return;
+        if (state._peeked === c) confirmPick(c, entry, need, hint, tray); // 已弹起 → 再点选中
+        else peekCard(c);                                                 // 未弹起 → 先弹出
+      });
       fan.appendChild(c);
     });
+
+    // 划过/悬停:让指到的牌弹出到 3/4 位置(逐张弹出)
+    function peekFromPoint(x, y) {
+      const target = document.elementFromPoint(x, y);
+      if (!target || !target.closest) return;
+      const card = target.closest(".fan-card");
+      if (card && !card.classList.contains("picked")) peekCard(card);
+    }
+    fan.addEventListener("mousemove", e => { if (!state._drawing) peekFromPoint(e.clientX, e.clientY); });
+    fan.addEventListener("touchstart", () => { state._didMove = false; }, { passive: true });
+    fan.addEventListener("touchmove", e => {
+      state._didMove = true;
+      const tt = e.touches[0]; if (tt) peekFromPoint(tt.clientX, tt.clientY);
+    }, { passive: true });
+    fan.addEventListener("touchend", () => { if (state._didMove) state._suppressClick = true; });
+
     requestAnimationFrame(() => fan.classList.add("dealt"));
   }
 
@@ -323,11 +358,12 @@
     hintEl.innerHTML = chosen < need ? t().pickHint(chosen, need) : t().pickDone(need);
   }
 
-  function onPick(cardEl, entry, need, hintEl, tray) {
-    if (state._drawing) return;                 // 抽卡动画进行中,锁定
+  function confirmPick(cardEl, entry, need, hintEl, tray) {
+    if (state._drawing) return;
     if (cardEl.classList.contains("picked")) return;
     if (state.picked.length >= need) return;
     state._drawing = true;
+    cardEl.classList.remove("peek"); state._peeked = null;
     cardEl.classList.add("picked");
     const posIndex = state.picked.length;
     const position = state.spread.positions[posIndex];
