@@ -308,6 +308,211 @@ h1,h2,h3{font-weight:600;}
 .reading-summary b{color:var(--gold);letter-spacing:3px;}
 .summary-note{color:var(--violet);font-style:italic;}
 
+/* =========================================================
+   高级抽卡:华丽卡背 + 抽卡飞行特效 + 收集托盘 + 翻牌光芒
+   ========================================================= */
+.card-back{position:relative;width:100%;height:100%;border-radius:12px;overflow:hidden;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(231,200,106,.22), transparent 56%),
+    linear-gradient(160deg,#1e1348 0%,#100a2a 55%,#0a0720 100%);
+  border:1.5px solid var(--gold-dim);
+  box-shadow:inset 0 0 22px rgba(0,0,0,.6), 0 0 12px rgba(90,60,170,.3);}
+.card-back::before{content:"";position:absolute;inset:6px;border-radius:8px;
+  border:1px solid rgba(231,200,106,.38);box-shadow:inset 0 0 14px rgba(231,200,106,.12);}
+.cb-emblem{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:2.1em;color:var(--gold);text-shadow:0 0 14px rgba(231,200,106,.75);
+  animation:cbPulse 3.4s ease-in-out infinite;}
+@keyframes cbPulse{0%,100%{opacity:.75;transform:scale(1);}50%{opacity:1;transform:scale(1.09);}}
+.cb-ring{position:absolute;left:50%;top:50%;border-radius:50%;transform:translate(-50%,-50%);}
+.cb-ring.r1{width:56%;height:34%;border:1px solid rgba(231,200,106,.28);}
+.cb-ring.r2{width:76%;height:47%;border:1px solid rgba(138,107,255,.28);}
+.cb-corner{position:absolute;width:12px;height:12px;opacity:.65;}
+.cb-corner.tl{left:5px;top:5px;border-left:1px solid var(--gold);border-top:1px solid var(--gold);}
+.cb-corner.tr{right:5px;top:5px;border-right:1px solid var(--gold);border-top:1px solid var(--gold);}
+.cb-corner.bl{left:5px;bottom:5px;border-left:1px solid var(--gold);border-bottom:1px solid var(--gold);}
+.cb-corner.br{right:5px;bottom:5px;border-right:1px solid var(--gold);border-bottom:1px solid var(--gold);}
+.cb-moon{position:absolute;left:50%;top:13%;width:7px;height:7px;border-radius:50%;transform:translateX(-50%);
+  background:var(--gold-bright);box-shadow:0 0 10px var(--gold-bright);}
+
+/* 扇形牌改用元素化卡背 */
+.fan-card .card-back{position:absolute;inset:0;}
+.fan-card.picked{opacity:0;transform:rotate(var(--ang)) translateY(-70px) scale(.55);
+  transition:opacity .5s ease, transform .5s ease;pointer-events:none;animation:none;}
+
+/* 顶层特效画布 */
+#draw-fx{position:fixed;inset:0;z-index:80;pointer-events:none;overflow:hidden;}
+.fly-card{position:fixed;border-radius:12px;will-change:transform;z-index:82;}
+.fly-card .card-back{position:absolute;inset:0;
+  box-shadow:0 0 34px rgba(231,200,106,.65),inset 0 0 22px rgba(0,0,0,.6);}
+.draw-aura{position:fixed;width:10px;height:10px;transform:translate(-50%,-50%);border-radius:50%;
+  opacity:0;transition:opacity .5s ease;z-index:81;}
+.draw-aura.on{opacity:1;width:540px;height:540px;
+  background:radial-gradient(circle, rgba(255,233,168,.5) 0%, rgba(231,200,106,.16) 32%, transparent 64%);
+  animation:auraPulse 1.6s ease-in-out infinite;}
+.draw-aura.on::before{content:"";position:absolute;inset:-6%;border-radius:50%;
+  background:conic-gradient(from 0deg,transparent 0 7deg,rgba(255,233,168,.28) 8deg 9deg,transparent 10deg 30deg);
+  animation:auraSpin 9s linear infinite;}
+.draw-aura.off{opacity:0;}
+@keyframes auraSpin{to{transform:rotate(360deg);}}
+@keyframes auraPulse{0%,100%{filter:brightness(1);}50%{filter:brightness(1.45);}}
+.spark{position:fixed;border-radius:50%;pointer-events:none;z-index:83;
+  background:radial-gradient(circle,#fff5d0,var(--gold) 55%,rgba(231,200,106,0));
+  box-shadow:0 0 8px rgba(255,233,168,.9);}
+
+/* 底部收集托盘 */
+.draw-tray{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:20px auto 0;min-height:64px;}
+.tray-slot{width:46px;height:76px;border-radius:8px;position:relative;display:flex;align-items:center;justify-content:center;
+  border:1px dashed rgba(231,200,106,.4);background:rgba(20,12,44,.35);transition:border-color .3s;}
+.tray-slot .tray-num{color:var(--gold-dim);font-size:15px;font-family:"Cinzel",serif;}
+.tray-slot.filled{border-style:solid;border-color:var(--gold);box-shadow:0 0 14px rgba(231,200,106,.4);}
+.tray-slot .card-back.mini{position:absolute;inset:0;}
+.card-back.mini .cb-emblem{font-size:1.1em;}
+.card-back.mini .cb-corner{width:6px;height:6px;}
+.card-back.mini::before{inset:3px;}
+
+/* 翻牌:光芒爆发 + 弹跳 */
+.flip-card.revealed{animation:flipPop .8s ease;}
+@keyframes flipPop{0%{transform:scale(1);}42%{transform:scale(1.13);}100%{transform:scale(1);}}
+.reveal-rays{position:absolute;inset:-45%;pointer-events:none;z-index:9;border-radius:50%;
+  background:conic-gradient(from 0deg,rgba(255,233,168,0) 0 6deg,rgba(255,233,168,.55) 7deg 8deg,rgba(255,233,168,0) 9deg 24deg);
+  animation:rayBurst .9s ease-out forwards;}
+@keyframes rayBurst{0%{opacity:0;transform:scale(.2) rotate(0);}30%{opacity:.9;}100%{opacity:0;transform:scale(1.7) rotate(42deg);}}
+
+/* ---------- 语言切换按钮 ---------- */
+.lang-btn{
+  position:fixed;top:16px;right:16px;z-index:30;
+  font-family:"Cinzel","Noto Serif SC",serif;cursor:pointer;
+  padding:7px 16px;border-radius:30px;font-size:13px;letter-spacing:2px;
+  color:var(--gold);background:rgba(20,12,44,.6);
+  border:1px solid rgba(231,200,106,.45);backdrop-filter:blur(6px);
+  transition:all .2s ease;
+}
+.lang-btn:hover{color:#1a1030;background:linear-gradient(135deg,var(--gold-bright),var(--gold));
+  box-shadow:0 0 16px rgba(231,200,106,.5);transform:translateY(-1px);}
+
+/* ---------- 复制去问 AI 按钮 ---------- */
+.btn-copy{
+  font-family:inherit;cursor:pointer;border-radius:40px;
+  padding:13px 28px;font-size:15px;letter-spacing:2px;
+  color:var(--azure);background:rgba(20,30,60,.5);
+  border:1px solid rgba(95,178,255,.5);transition:all .22s ease;
+}
+.btn-copy:hover{color:#04101f;transform:translateY(-2px);
+  background:linear-gradient(135deg,#bfe4ff,var(--azure));
+  box-shadow:0 0 18px rgba(95,178,255,.5);}
+.btn-copy.ok{color:#04101f;background:linear-gradient(135deg,#b8f5cf,#4fd88a);
+  border-color:#4fd88a;box-shadow:0 0 18px rgba(79,216,138,.6);}
+
+/* ---------- 提示条 toast ---------- */
+.toast{
+  position:fixed;left:50%;bottom:38px;transform:translateX(-50%) translateY(20px);
+  z-index:60;padding:12px 26px;border-radius:30px;font-size:14px;letter-spacing:1px;
+  color:#1a1030;background:linear-gradient(135deg,var(--gold-bright),var(--gold));
+  box-shadow:0 8px 30px rgba(231,200,106,.5);
+  opacity:0;pointer-events:none;transition:opacity .3s ease,transform .3s ease;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* =========================================================
+   哥特主题(英文界面)· data-theme="gothic"
+   暗红石壁 · 烛焰余烬 · 黑体花字 · 十字纹章
+   ========================================================= */
+[data-theme="gothic"]{
+  --bg0:#08060a; --bg1:#160c13; --bg2:#241019;
+  --gold:#c9a24b; --gold-bright:#f0d98f; --gold-dim:#8a6f38;
+  --violet:#6d2740; --violet-deep:#3a121f; --azure:#8aa0d0;
+  --ink:#eae2d0; --ink-dim:#b1a186;
+}
+[data-theme="gothic"] body{
+  background:radial-gradient(circle at 50% -8%, #3a1622 0%, #170b12 46%, #08060a 100%);
+  font-family:"Cormorant Garamond","EB Garamond","Noto Serif SC",serif;
+}
+[data-theme="gothic"] .app{font-size:17px;}
+[data-theme="gothic"] .title{
+  font-family:"UnifrakturCook","Cinzel",serif;font-weight:700;letter-spacing:2px;
+  background:linear-gradient(120deg,#f6e6b0,#c9a24b 45%,#a52633);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 16px rgba(165,38,51,.45));
+}
+[data-theme="gothic"] .subtitle{font-family:"Pirata One",serif;letter-spacing:6px;color:var(--gold-dim);}
+[data-theme="gothic"] .panel-title{font-family:"Pirata One","Cinzel",serif;letter-spacing:2px;
+  color:var(--gold);text-shadow:0 0 16px rgba(165,38,51,.4);}
+[data-theme="gothic"] .panel-sub{font-family:"Pirata One",serif;letter-spacing:2px;}
+[data-theme="gothic"] .btn-primary,[data-theme="gothic"] .btn-ghost,[data-theme="gothic"] .lang-btn,
+[data-theme="gothic"] .domain-tab,[data-theme="gothic"] .btn-copy,[data-theme="gothic"] .spread-name{
+  font-family:"Pirata One","Cinzel",serif;letter-spacing:2px;}
+[data-theme="gothic"] .sigil{color:var(--gold);text-shadow:0 0 24px rgba(165,38,51,.6);}
+
+[data-theme="gothic"] .btn-primary{color:#241014;
+  background:linear-gradient(135deg,#f0d98f,#c9a24b 45%,#8a6f38);
+  box-shadow:0 0 0 1px rgba(240,217,143,.4),0 8px 26px rgba(139,30,45,.4);}
+[data-theme="gothic"] .btn-primary.glow{animation:gothGlow 3.4s ease-in-out infinite;}
+@keyframes gothGlow{0%,100%{filter:drop-shadow(0 0 4px rgba(201,162,75,.4));}50%{filter:drop-shadow(0 0 16px rgba(165,38,51,.85));}}
+[data-theme="gothic"] .btn-ghost{color:var(--gold);border-color:rgba(201,162,75,.4);background:rgba(42,16,25,.4);}
+
+[data-theme="gothic"] .panel{background:linear-gradient(160deg,rgba(42,15,24,.62),rgba(14,8,12,.72));
+  border-color:rgba(201,162,75,.3);box-shadow:0 0 40px rgba(139,30,45,.22),inset 0 0 30px rgba(139,30,45,.12);}
+[data-theme="gothic"] .q-input{background:rgba(20,10,14,.6);border-color:rgba(201,162,75,.3);}
+[data-theme="gothic"] .q-input:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(165,38,51,.25);}
+[data-theme="gothic"] .spread-card{background:rgba(30,12,20,.55);border-color:rgba(139,30,45,.3);}
+[data-theme="gothic"] .spread-card:hover{border-color:rgba(201,162,75,.5);}
+[data-theme="gothic"] .spread-card.selected{border-color:var(--gold);
+  background:linear-gradient(120deg,rgba(80,24,38,.6),rgba(30,12,20,.6));
+  box-shadow:0 0 22px rgba(165,38,51,.28),inset 0 0 20px rgba(139,30,45,.2);}
+[data-theme="gothic"] .spread-count{color:#cf9a86;}
+[data-theme="gothic"] .reading-kw{color:#cf9a86;}
+
+/* 卡背:暗红石壁 + 十字 */
+[data-theme="gothic"] .card-back{
+  background:radial-gradient(circle at 50% 40%,rgba(139,30,45,.4),transparent 55%),
+    linear-gradient(160deg,#2a0f18 0%,#180a10 58%,#0a0609 100%);border-color:var(--gold-dim);}
+[data-theme="gothic"] .cb-ring.r1{border-color:rgba(201,162,75,.3);}
+[data-theme="gothic"] .cb-ring.r2{border-color:rgba(139,30,45,.42);}
+[data-theme="gothic"] .cb-emblem{color:var(--gold);text-shadow:0 0 14px rgba(165,38,51,.7);}
+[data-theme="gothic"] .cb-moon{background:#c9a24b;box-shadow:0 0 10px #a52633;}
+
+/* 洗牌牌背 */
+[data-theme="gothic"] .back-face,[data-theme="gothic"] .back{
+  background:radial-gradient(circle at 50% 32%,rgba(139,30,45,.4),transparent 46%),
+    repeating-linear-gradient(45deg,#2a0f18 0 9px,#1a0a12 9px 18px);border-color:var(--gold-dim);}
+[data-theme="gothic"] .back-face::after,[data-theme="gothic"] .back::after{
+  content:"\271D";color:rgba(201,162,75,.6);text-shadow:0 0 12px rgba(165,38,51,.5);}
+
+/* 抽卡:烛焰暖光 + 余烬火星 */
+[data-theme="gothic"] .draw-aura.on{
+  background:radial-gradient(circle,rgba(240,217,143,.5) 0%,rgba(139,30,45,.22) 34%,transparent 66%);}
+[data-theme="gothic"] .draw-aura.on::before{
+  background:conic-gradient(from 0deg,transparent 0 10deg,rgba(240,217,143,.28) 11deg 12deg,transparent 13deg 32deg);}
+[data-theme="gothic"] .spark{background:radial-gradient(circle,#ffe6a8,#a52633 58%,rgba(165,38,51,0));
+  box-shadow:0 0 8px rgba(255,150,70,.85);}
+[data-theme="gothic"] .fly-card .card-back{box-shadow:0 0 34px rgba(165,38,51,.6),inset 0 0 22px rgba(0,0,0,.6);}
+[data-theme="gothic"] .burst{background:radial-gradient(circle,rgba(255,224,150,.8),rgba(165,38,51,0) 60%);}
+[data-theme="gothic"] .reveal-rays{
+  background:conic-gradient(from 0deg,rgba(240,217,143,0) 0 5deg,rgba(240,217,143,.5) 6deg 8deg,rgba(139,30,45,.45) 9deg 11deg,rgba(240,217,143,0) 12deg 24deg);}
+
+/* 翻牌 / 托盘 / 解读 */
+[data-theme="gothic"] .flip-front{border-color:var(--gold);box-shadow:0 0 22px rgba(165,38,51,.4);}
+[data-theme="gothic"] .tray-slot{border-color:rgba(201,162,75,.4);background:rgba(30,12,18,.35);}
+[data-theme="gothic"] .tray-slot.filled{border-color:var(--gold);box-shadow:0 0 14px rgba(165,38,51,.4);}
+[data-theme="gothic"] .pos-tag{background:var(--gold);color:#241014;}
+[data-theme="gothic"] .reading-item{background:linear-gradient(150deg,rgba(50,18,28,.5),rgba(14,8,12,.6));
+  border-color:rgba(201,162,75,.24);}
+[data-theme="gothic"] .reading-summary{background:linear-gradient(150deg,rgba(80,24,38,.42),rgba(14,8,12,.55));
+  border-color:rgba(201,162,75,.4);}
+[data-theme="gothic"] .summary-note{color:#cf9a86;}
+[data-theme="gothic"] .domain-tab{background:rgba(30,12,18,.5);border-color:rgba(139,30,45,.3);}
+[data-theme="gothic"] .domain-tab.active{color:#241014;border-color:var(--gold);
+  background:linear-gradient(135deg,#f0d98f,#c9a24b);box-shadow:0 0 16px rgba(165,38,51,.4);}
+[data-theme="gothic"] .btn-copy{color:#e7b98f;border-color:rgba(201,162,75,.5);background:rgba(42,16,25,.5);}
+[data-theme="gothic"] .btn-copy:hover{color:#241014;background:linear-gradient(135deg,#f0d98f,#c9a24b);box-shadow:0 0 18px rgba(165,38,51,.5);}
+[data-theme="gothic"] .btn-copy.ok{color:#0a1f12;background:linear-gradient(135deg,#b8f5cf,#4fd88a);}
+[data-theme="gothic"] .lang-btn{color:var(--gold);border-color:rgba(201,162,75,.45);background:rgba(30,12,18,.6);}
+[data-theme="gothic"] .lang-btn:hover{color:#241014;background:linear-gradient(135deg,#f0d98f,#c9a24b);box-shadow:0 0 16px rgba(165,38,51,.5);}
+[data-theme="gothic"] .toast{color:#241014;background:linear-gradient(135deg,#f0d98f,#c9a24b);
+  box-shadow:0 8px 30px rgba(165,38,51,.5);}
+[data-theme="gothic"] .shuffle-text,[data-theme="gothic"] .pick-hint{font-family:"Cormorant Garamond",serif;}
+[data-theme="gothic"] .read-question{color:#cf9a86;}
+
 /* ---------- 响应式 ---------- */
 @media(max-width:640px){
   :root{--card-w:92px;--card-h:154px;}
