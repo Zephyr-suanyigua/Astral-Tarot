@@ -424,15 +424,22 @@ h1,h2,h3{font-weight:600;}
   --ink:#eae2d0; --ink-dim:#b1a186;
 }
 [data-theme="gothic"] body{
-  background:radial-gradient(circle at 50% -8%, #3a1622 0%, #170b12 46%, #08060a 100%);
+  background:radial-gradient(circle at 50% -12%, #2c0d16 0%, #100509 44%, #030203 100%);
   font-family:"Cormorant Garamond","EB Garamond","Noto Serif SC",serif;
+}
+/* 幽暗晕影,四周更深邃,聚光于中央 */
+[data-theme="gothic"] body::before{
+  content:"";position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 50% 34%, transparent 38%, rgba(0,0,0,.42) 72%, rgba(0,0,0,.72) 100%),
+    radial-gradient(circle at 50% 8%, rgba(139,30,45,.16), transparent 46%);
 }
 [data-theme="gothic"] .app{font-size:17px;}
 [data-theme="gothic"] .title{
   font-family:"UnifrakturCook","Cinzel",serif;font-weight:700;letter-spacing:2px;
   background:linear-gradient(120deg,#f6e6b0,#c9a24b 45%,#a52633);
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-  filter:drop-shadow(0 0 16px rgba(165,38,51,.45));
+  filter:drop-shadow(0 0 22px rgba(165,38,51,.6)) drop-shadow(0 0 4px rgba(0,0,0,.7));
 }
 [data-theme="gothic"] .subtitle{font-family:"Pirata One",serif;letter-spacing:6px;color:var(--gold-dim);}
 [data-theme="gothic"] .panel-title{font-family:"Pirata One","Cinzel",serif;letter-spacing:2px;
@@ -441,7 +448,14 @@ h1,h2,h3{font-weight:600;}
 [data-theme="gothic"] .btn-primary,[data-theme="gothic"] .btn-ghost,[data-theme="gothic"] .lang-btn,
 [data-theme="gothic"] .domain-tab,[data-theme="gothic"] .btn-copy,[data-theme="gothic"] .spread-name{
   font-family:"Pirata One","Cinzel",serif;letter-spacing:2px;}
-[data-theme="gothic"] .sigil{color:var(--gold);text-shadow:0 0 24px rgba(165,38,51,.6);}
+[data-theme="gothic"] .sigil{color:var(--gold);animation:gothFlicker 4.5s ease-in-out infinite;}
+@keyframes gothFlicker{
+  0%,100%{opacity:.92;text-shadow:0 0 16px rgba(165,38,51,.55),0 0 40px rgba(139,30,45,.28);transform:scale(1);}
+  20%{opacity:1;text-shadow:0 0 30px rgba(201,162,75,.85),0 0 66px rgba(165,38,51,.55);}
+  32%{opacity:.7;text-shadow:0 0 12px rgba(165,38,51,.4);}
+  46%{opacity:1;text-shadow:0 0 26px rgba(201,162,75,.8),0 0 60px rgba(165,38,51,.5);}
+  58%{opacity:.82;}
+}
 
 [data-theme="gothic"] .btn-primary{color:#241014;
   background:linear-gradient(135deg,#f0d98f,#c9a24b 45%,#8a6f38);
@@ -450,8 +464,8 @@ h1,h2,h3{font-weight:600;}
 @keyframes gothGlow{0%,100%{filter:drop-shadow(0 0 4px rgba(201,162,75,.4));}50%{filter:drop-shadow(0 0 16px rgba(165,38,51,.85));}}
 [data-theme="gothic"] .btn-ghost{color:var(--gold);border-color:rgba(201,162,75,.4);background:rgba(42,16,25,.4);}
 
-[data-theme="gothic"] .panel{background:linear-gradient(160deg,rgba(42,15,24,.62),rgba(14,8,12,.72));
-  border-color:rgba(201,162,75,.3);box-shadow:0 0 40px rgba(139,30,45,.22),inset 0 0 30px rgba(139,30,45,.12);}
+[data-theme="gothic"] .panel{background:linear-gradient(160deg,rgba(30,9,16,.74),rgba(6,4,7,.82));
+  border-color:rgba(201,162,75,.3);box-shadow:0 0 46px rgba(139,30,45,.28),inset 0 0 34px rgba(139,30,45,.14),0 18px 50px rgba(0,0,0,.6);}
 [data-theme="gothic"] .q-input{background:rgba(20,10,14,.6);border-color:rgba(201,162,75,.3);}
 [data-theme="gothic"] .q-input:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(165,38,51,.25);}
 [data-theme="gothic"] .spread-card{background:rgba(30,12,20,.55);border-color:rgba(139,30,45,.3);}
@@ -464,8 +478,8 @@ h1,h2,h3{font-weight:600;}
 
 /* 卡背:暗红石壁 + 十字 */
 [data-theme="gothic"] .card-back{
-  background:radial-gradient(circle at 50% 40%,rgba(139,30,45,.4),transparent 55%),
-    linear-gradient(160deg,#2a0f18 0%,#180a10 58%,#0a0609 100%);border-color:var(--gold-dim);}
+  background:radial-gradient(circle at 50% 40%,rgba(139,30,45,.42),transparent 54%),
+    linear-gradient(160deg,#220b13 0%,#120609 60%,#050304 100%);border-color:var(--gold-dim);}
 [data-theme="gothic"] .cb-ring.r1{border-color:rgba(201,162,75,.3);}
 [data-theme="gothic"] .cb-ring.r2{border-color:rgba(139,30,45,.42);}
 [data-theme="gothic"] .cb-emblem{color:var(--gold);text-shadow:0 0 14px rgba(165,38,51,.7);}

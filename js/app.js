@@ -654,19 +654,19 @@
       ctx.clearRect(0, 0, w, h);
       if (gothic) {
         // 哥特:暗红雾气 + 上升余烬
-        const g1 = ctx.createRadialGradient(w * 0.5, -h * 0.1, 0, w * 0.5, -h * 0.1, w * 0.7);
-        g1.addColorStop(0, "rgba(139,30,45,0.20)"); g1.addColorStop(1, "rgba(139,30,45,0)");
+        const g1 = ctx.createRadialGradient(w * 0.5, -h * 0.08, 0, w * 0.5, -h * 0.08, w * 0.72);
+        g1.addColorStop(0, "rgba(150,26,44,0.26)"); g1.addColorStop(1, "rgba(150,26,44,0)");
         ctx.fillStyle = g1; ctx.fillRect(0, 0, w, h);
-        const g2 = ctx.createRadialGradient(w * 0.5, h * 1.05, 0, w * 0.5, h * 1.05, w * 0.62);
-        g2.addColorStop(0, "rgba(70,26,58,0.18)"); g2.addColorStop(1, "rgba(70,26,58,0)");
+        const g2 = ctx.createRadialGradient(w * 0.5, h * 1.08, 0, w * 0.5, h * 1.08, w * 0.66);
+        g2.addColorStop(0, "rgba(58,18,50,0.22)"); g2.addColorStop(1, "rgba(58,18,50,0)");
         ctx.fillStyle = g2; ctx.fillRect(0, 0, w, h);
         stars.forEach(st => {
           st.y -= st.vy; st.x += st.drift;
           if (st.y < -4) { st.y = h + 4; st.x = Math.random() * w; }
           st.a += st.tw;
-          const alpha = 0.22 + Math.abs(Math.sin(st.a)) * 0.6;
+          const alpha = 0.18 + Math.abs(Math.sin(st.a)) * 0.55;
           ctx.beginPath();
-          ctx.fillStyle = "rgba(240,180,100," + alpha + ")";
+          ctx.fillStyle = st.hue === 45 ? "rgba(230,150,70," + alpha + ")" : "rgba(190,70,48," + alpha + ")";
           ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2); ctx.fill();
         });
       } else {
