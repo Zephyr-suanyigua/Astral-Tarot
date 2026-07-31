@@ -1,5 +1,5 @@
-/* 星界塔罗 · Service Worker —— 离线缓存 */
-const CACHE = "astral-tarot-v1";
+/* 星界塔罗 · Service Worker */
+const CACHE = "astral-tarot-v2";
 const CORE = [
   "./",
   "./index.html",
@@ -24,19 +24,34 @@ self.addEventListener("activate", e => {
   self.clients.claim();
 });
 
-// 缓存优先,回退网络;图片等首次访问后自动缓存
+/* 代码/页面(html/js/css/manifest):网络优先,保证更新即时可见,离线回退缓存。
+   图片等静态资源:缓存优先,首次访问后离线可用。 */
 self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;
-  e.respondWith(
-    caches.match(e.request).then(hit => {
-      if (hit) return hit;
-      return fetch(e.request).then(res => {
-        if (res && res.status === 200 && res.type === "basic") {
+  const url = new URL(e.request.url);
+  const isAsset = /\.(?:png|jpe?g|gif|webp|svg|ico|woff2?|ttf)$/i.test(url.pathname);
+
+  if (isAsset) {
+    e.respondWith(
+      caches.match(e.request).then(hit => hit || fetch(e.request).then(res => {
+        if (res && res.status === 200) {
           const copy = res.clone();
           caches.open(CACHE).then(c => c.put(e.request, copy));
         }
         return res;
-      }).catch(() => hit);
-    })
+      }).catch(() => hit))
+    );
+    return;
+  }
+
+  // network-first
+  e.respondWith(
+    fetch(e.request).then(res => {
+      if (res && res.status === 200 && res.type === "basic") {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, copy));
+      }
+      return res;
+    }).catch(() => caches.match(e.request).then(hit => hit || caches.match("./index.html")))
   );
 });
