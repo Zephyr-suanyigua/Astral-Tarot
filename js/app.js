@@ -337,7 +337,8 @@
     const hint = el("p", "pick-hint", ""); head.appendChild(hint);
     s.appendChild(head);
 
-    // 收集区(置于上方,与候选牌分离):带标题的"已抽取"槽位
+    // 舞台:牌轮 + 顶部叠放的"已抽取"框(同一裁剪容器;待选框层级更低 → 升起的牌盖过它且保留遮挡)
+    const stage = el("div", "pick-stage");
     const zone = el("div", "draw-zone");
     zone.appendChild(el("div", "draw-zone-label", t().drawnLabel));
     const tray = el("div", "draw-tray");
@@ -347,13 +348,11 @@
       tray.appendChild(slot);
     }
     zone.appendChild(tray);
-    s.appendChild(zone);
+    stage.appendChild(zone);
 
-    // 候选牌:屏幕下方的巨型牌轮,只露出顶部一小段弧;左右拖动旋转
-    const wrap = el("div", "wheel-wrap");
     const wheel = el("div", "wheel");
-    wrap.appendChild(wheel);
-    s.appendChild(wrap);
+    stage.appendChild(wheel);
+    s.appendChild(stage);
 
     const pool = state.deck;                 // 全部 78 张
     const n = pool.length;
@@ -371,8 +370,8 @@
       c.addEventListener("click", () => {
         if (state._suppressClick) { state._suppressClick = false; return; }  // 刚才是拖动,不算选中
         if (c.classList.contains("picked") || state._drawing || !state._wheelReady) return;
-        if (state._peeked === c) { removePeek(); confirmPick(c, entry, need, hint, tray); } // 已弹起 → 再点选中
-        else peekWheel(c);                                                   // 未弹起 → 先弹出预览
+        if (state._peeked === c) { c.classList.remove("peek"); state._peeked = null; confirmPick(c, entry, need, hint, tray); } // 已升起 → 再点选中
+        else peekCard(c);                                                    // 未升起 → 原地升起
       });
       wheel.appendChild(c);
     });
@@ -395,40 +394,21 @@
     wheel.classList.add("wheel-in");
     setTimeout(() => { wheel.classList.remove("wheel-in"); state._wheelReady = true; }, 1150);
 
-    // 交互:左右拖动旋转牌轮;鼠标悬停/轻点选牌
+    // 交互:左右拖动旋转牌轮;鼠标悬停/轻点使牌"原地升起"(相邻牌自然遮挡,露约 3/4)
     let pdown = false, lastX = 0, moved = 0;
-    // 升起的预览牌放到最顶层浮层,不受牌轮裁剪、盖过待选框
-    function removePeek() { if (state._peekPrev) { state._peekPrev.remove(); state._peekPrev = null; } }
-    function peekWheel(card) {
-      if (state._peeked === card) return;
-      removePeek();
-      state._peeked = card;
-      const cw = card.offsetWidth, ch = card.offsetHeight;
-      const r = card.getBoundingClientRect();
-      const ang = parseInt(card.dataset.idx, 10) * step + rot;
-      const prev = el("div", "peek-preview");
-      prev.style.width = cw + "px"; prev.style.height = ch + "px";
-      prev.style.left = (r.left + r.width / 2) + "px";
-      prev.style.top = (r.top + r.height / 2) + "px";
-      prev.style.setProperty("--pa", ang.toFixed(2) + "deg");
-      prev.appendChild(ornateBack());
-      fxLayer().appendChild(prev);
-      state._peekPrev = prev;
-      requestAnimationFrame(() => prev.classList.add("on"));
-    }
-    const unpeek = () => { removePeek(); state._peeked = null; };
+    const unpeek = () => { if (state._peeked) { state._peeked.classList.remove("peek"); state._peeked = null; } };
     function peekAt(x, y) {
       const target = document.elementFromPoint(x, y);
       const card = target && target.closest && target.closest(".wheel-card");
-      if (card && !card.classList.contains("picked")) peekWheel(card);
+      if (card && !card.classList.contains("picked")) peekCard(card);
       else unpeek();
     }
-    wrap.addEventListener("pointerdown", e => {
+    stage.addEventListener("pointerdown", e => {
       if (state._drawing || !state._wheelReady) return;
       pdown = true; lastX = e.clientX; moved = 0; state._suppressClick = false;
-      try { wrap.setPointerCapture(e.pointerId); } catch (er) {}
+      try { stage.setPointerCapture(e.pointerId); } catch (er) {}
     });
-    wrap.addEventListener("pointermove", e => {
+    stage.addEventListener("pointermove", e => {
       if (state._drawing) return;
       if (pdown) {
         const dx = e.clientX - lastX; lastX = e.clientX; moved += Math.abs(dx);
@@ -437,13 +417,13 @@
           rot += dx * 0.16; applyRot();
         }
       } else if (e.pointerType === "mouse" && state._wheelReady) {
-        peekAt(e.clientX, e.clientY);          // 鼠标悬停预览
+        peekAt(e.clientX, e.clientY);          // 鼠标悬停
       }
     });
-    const endDrag = e => { pdown = false; try { wrap.releasePointerCapture(e.pointerId); } catch (er) {} };
-    wrap.addEventListener("pointerup", endDrag);
-    wrap.addEventListener("pointercancel", endDrag);
-    wrap.addEventListener("mouseleave", () => { if (!pdown) unpeek(); });
+    const endDrag = e => { pdown = false; try { stage.releasePointerCapture(e.pointerId); } catch (er) {} };
+    stage.addEventListener("pointerup", endDrag);
+    stage.addEventListener("pointercancel", endDrag);
+    stage.addEventListener("mouseleave", () => { if (!pdown) unpeek(); });
   }
 
   function updateHint(hintEl, chosen, need) {
