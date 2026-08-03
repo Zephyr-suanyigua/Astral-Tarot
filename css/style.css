@@ -175,27 +175,33 @@ h1,h2,h3{font-weight:600;}
 .pick-head{text-align:center;margin-bottom:8px;}
 .pick-hint{color:var(--ink-dim);font-size:14px;letter-spacing:1px;min-height:22px;}
 .pick-hint b{color:var(--gold-bright);}
-/* 候选牌:三行·向上微拱的浅扇·Z 字折叠(完整 78 张) */
-.fan{position:relative;width:100%;max-width:980px;height:min(70vh,600px);margin:2px auto 0;
-  --pcw:80px;--pch:134px;}
-.fan-card{
-  position:absolute;left:var(--x);top:var(--y);
-  width:var(--pcw);height:var(--pch);
-  transform:translate(-50%,-50%) rotate(var(--rot)) translateY(200px);
-  opacity:0;cursor:pointer;
-  transition:transform .3s cubic-bezier(.2,.85,.3,1),opacity .3s,filter .24s;
-  transition-delay:var(--delay);
-}
-.fan.dealt .fan-card{opacity:1;transform:translate(-50%,-50%) rotate(var(--rot)) translateY(0);}
-/* 铺开完成后取消错峰延迟 → 弹起/落下即时顺滑 */
-.fan.ready .fan-card{transition-delay:0s;}
-/* 悬停:沿卡片自身轴"向上"抬出露约 3/4,保留与相邻牌的真实叠压(层级不变) */
-.fan.ready .fan-card.peek{
-  transform:translate(-50%,-50%) rotate(var(--rot)) translateY(-52%) scale(1.14);
-  filter:brightness(1.22) drop-shadow(0 0 16px rgba(231,200,106,.8));
+/* 候选牌:屏幕下方的巨型旋转牌轮(只露出顶部一小段弧) */
+.wheel-wrap{position:relative;width:100%;max-width:1200px;height:min(60vh,560px);margin:6px auto 0;
+  overflow:hidden;--pcw:82px;--pch:137px;--wheel-r:114vh;
+  touch-action:pan-y;cursor:grab;}
+.wheel-wrap:active{cursor:grabbing;}
+.wheel{position:absolute;left:50%;top:calc(var(--wheel-r) + 9vh);width:0;height:0;
+  transform:rotate(var(--rot,0deg));will-change:transform;}
+.wheel-card{position:absolute;left:0;top:0;width:var(--pcw);height:var(--pch);
+  margin-left:calc(var(--pcw) / -2);margin-top:calc(var(--pch) / -2);
+  transform:rotate(var(--wang)) translateY(calc(-1 * var(--wheel-r)));
+  cursor:pointer;transition:transform .28s cubic-bezier(.2,.85,.3,1),filter .24s;}
+.wheel-card .wc-inner{width:100%;height:100%;animation:wcFloat 4.4s ease-in-out infinite;animation-delay:var(--fdelay);}
+.wheel-card .card-back{width:100%;height:100%;}
+@keyframes wcFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+/* 悬停:沿半径"向外/上"抬出露约 3/4,层级不变 → 保留真实叠压 */
+.wheel .wheel-card.peek{
+  transform:rotate(var(--wang)) translateY(calc(-1 * var(--wheel-r) - var(--pch) * .6)) scale(1.07);
+  filter:brightness(1.2) drop-shadow(0 0 16px rgba(231,200,106,.8));}
+.wheel-card.picked{opacity:0;pointer-events:none;transition:opacity .3s ease;}
+/* 入场:中心一摞 → 下移 → 顺时针旋出成轮 */
+.wheel.wheel-in{animation:wheelIn 1.15s cubic-bezier(.2,.8,.25,1);}
+@keyframes wheelIn{
+  0%{transform:translateY(-42vh) scale(.4) rotate(-26deg);opacity:.15;}
+  45%{opacity:1;}
+  100%{transform:translateY(0) scale(1) rotate(0deg);}
 }
 .pick-tip{color:var(--ink-dim);font-size:12.5px;letter-spacing:1px;margin:2px 0 6px;opacity:.85;}
-.fan-card .card-back{width:100%;height:100%;}
 
 /* ---------- 解读:牌桌 + 翻牌 ---------- */
 .read-head{text-align:center;margin-bottom:10px;}
@@ -570,7 +576,7 @@ h1,h2,h3{font-weight:600;}
 @media(max-width:640px){
   :root{--card-w:92px;--card-h:154px;--rcard-w:108px;--rcard-h:180px;}
   .title{font-size:34px;letter-spacing:10px;}
-  .fan{height:min(58vh,470px);--pcw:62px;--pch:103px;}
+  .wheel-wrap{height:min(54vh,440px);--pcw:60px;--pch:100px;--wheel-r:96vh;}
   .reading-item{gap:12px;padding:12px;}
   .reading-thumb{flex:0 0 80px;width:80px;height:134px;}
   .btn-primary,.btn-ghost{padding:11px 24px;font-size:15px;}
@@ -579,5 +585,5 @@ h1,h2,h3{font-weight:600;}
 @media(max-width:400px){
   :root{--card-w:80px;--card-h:134px;--rcard-w:94px;--rcard-h:157px;}
   .shuffle3d{--radius:100px;}
-  .fan{--pcw:54px;--pch:90px;height:min(56vh,430px);}
+  .wheel-wrap{--pcw:52px;--pch:87px;--wheel-r:88vh;height:min(52vh,400px);}
 }

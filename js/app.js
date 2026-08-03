@@ -25,7 +25,7 @@
       shuffle: "Shuffle",
       shuffling: "Shuffling the deck… focus on your question",
       pickTitle: "Choose by Intuition",
-      pickTip: "Glide across the cards — a card rises as you pass; tap a raised card to claim it.",
+      pickTip: "Drag left/right to spin the wheel · a card rises when you hover or tap it — tap again to claim it.",
       pickHint: (c, n) => "Pick card <b>" + (c + 1) + "</b> &nbsp;·&nbsp; chosen " + c + " / " + n,
       pickDone: n => "All " + n + " chosen — revealing your reading…",
       drawnLabel: "DRAWN",
@@ -63,7 +63,7 @@
       shuffle: "洗 牌",
       shuffling: "正在洗牌……凝神于你的问题",
       pickTitle: "凭直觉选牌",
-      pickTip: "手指划过牌面,划到的牌会弹起;再点一下弹起的牌即可选定。",
+      pickTip: "左右拖动转动牌轮 · 划过或轻点卡牌使其升起,再点一下即可选定。",
       pickHint: (c, n) => "请选择第 <b>" + (c + 1) + "</b> 张牌 &nbsp;·&nbsp; 已选 " + c + " / " + n,
       pickDone: n => "已选满 " + n + " 张,正在为你揭示……",
       drawnLabel: "已抽取",
@@ -318,65 +318,74 @@
     zone.appendChild(tray);
     s.appendChild(zone);
 
-    // 候选牌:完整 78 张,仅三行,每行"向上微拱"的浅扇,Z 字蛇形折叠(可密集)
-    const fan = el("div", "fan snake"); s.appendChild(fan);
-    const pool = state.deck;                       // 全部 78 张
+    // 候选牌:屏幕下方的巨型牌轮,只露出顶部一小段弧;左右拖动旋转
+    const wrap = el("div", "wheel-wrap");
+    const wheel = el("div", "wheel");
+    wrap.appendChild(wheel);
+    s.appendChild(wrap);
+
+    const pool = state.deck;                 // 全部 78 张
     const n = pool.length;
-    const rows = 3;
+    const step = 360 / n;
     updateHint(hint, 0, need);
 
     pool.forEach((entry, idx) => {
-      const t = n > 1 ? idx / (n - 1) : 0.5;        // 0..1 沿一条连续蛇形路径
-      let u = t * rows, pass = Math.floor(u), f = u - pass;
-      if (pass >= rows) { pass = rows - 1; f = 1; }  // 收尾
-      const even = (pass % 2 === 0);
-      const cf = even ? f : (1 - f);                 // 视觉左→右位置;奇数段反向 → 首尾相连
-      // 首尾相连的 Z:第一、三段水平(两端同高)+ 向上微拱;第二段为倾斜的对角连接(右上→左下)
-      const topY = 24, botY = 72, arch = 12;
-      const x = (5 + cf * 90).toFixed(2);            // 横向 5%..95%(铺更宽,露出更多)
-      let y, rot;
-      if (pass === 1) {                               // 第二段:斜段(带弧度 + 扇形张开)
-        y = (topY + (botY - topY) * f - Math.sin(f * Math.PI) * 9).toFixed(2);
-        rot = (-13 + (cf - 0.5) * 22).toFixed(2);
-      } else {                                        // 第一/三段:水平 + 向上微拱 + 扇形张开
-        const baseY = (pass === 0) ? topY : botY;
-        y = (baseY - Math.sin(f * Math.PI) * arch).toFixed(2);
-        rot = ((cf - 0.5) * 26).toFixed(2);           // 端点角度大、中间接近竖直
-      }
-      const c = el("div", "fan-card");
-      c.appendChild(ornateBack());
-      c.style.setProperty("--x", x + "%");
-      c.style.setProperty("--y", y + "%");
-      c.style.setProperty("--rot", rot + "deg");
-      c.style.setProperty("--delay", (idx * 7) + "ms");
+      const c = el("div", "wheel-card");
+      const inner = el("div", "wc-inner"); inner.appendChild(ornateBack());
+      c.appendChild(inner);
+      c.style.setProperty("--wang", (idx * step).toFixed(2) + "deg");
+      c.style.setProperty("--fdelay", ((idx % 14) * 0.16).toFixed(2) + "s"); // 浮动错峰
       c.style.zIndex = String(idx);
       c.dataset.idx = idx;
       c.addEventListener("click", () => {
-        if (state._suppressClick) { state._suppressClick = false; return; } // 刚才是滑动,不算选中
-        if (c.classList.contains("picked") || state._drawing) return;
-        if (state._peeked === c) confirmPick(c, entry, need, hint, tray); // 已弹起 → 再点选中
-        else peekCard(c);                                                 // 未弹起 → 先弹出
+        if (state._suppressClick) { state._suppressClick = false; return; }  // 刚才是拖动,不算选中
+        if (c.classList.contains("picked") || state._drawing || !state._wheelReady) return;
+        if (state._peeked === c) confirmPick(c, entry, need, hint, tray);     // 已弹起 → 再点选中
+        else peekCard(c);                                                     // 未弹起 → 先弹出
       });
-      fan.appendChild(c);
+      wheel.appendChild(c);
     });
 
-    // 划过/悬停:让指到的牌弹出到 3/4 位置(逐张弹出)
-    function peekFromPoint(x, y) {
-      const target = document.elementFromPoint(x, y);
-      if (!target || !target.closest) return;
-      const card = target.closest(".fan-card");
-      if (card && !card.classList.contains("picked")) peekCard(card);
-    }
-    fan.addEventListener("mousemove", e => { if (!state._drawing) peekFromPoint(e.clientX, e.clientY); });
-    fan.addEventListener("touchstart", () => { state._didMove = false; }, { passive: true });
-    fan.addEventListener("touchmove", e => {
-      state._didMove = true;
-      const tt = e.touches[0]; if (tt) peekFromPoint(tt.clientX, tt.clientY);
-    }, { passive: true });
-    fan.addEventListener("touchend", () => { if (state._didMove) state._suppressClick = true; });
+    // 旋转状态
+    let rot = 0;
+    const applyRot = () => wheel.style.setProperty("--rot", rot.toFixed(2) + "deg");
+    applyRot();
 
-    requestAnimationFrame(() => fan.classList.add("dealt"));
-    setTimeout(() => fan.classList.add("ready"), n * 7 + 500); // 铺开完成后允许即时弹动
+    // 入场:中心一摞 → 下移 → 顺时针旋出成轮
+    state._wheelReady = false;
+    wheel.classList.add("wheel-in");
+    setTimeout(() => { wheel.classList.remove("wheel-in"); state._wheelReady = true; }, 1150);
+
+    // 交互:左右拖动旋转牌轮;鼠标悬停/轻点选牌
+    let pdown = false, lastX = 0, moved = 0;
+    const unpeek = () => { if (state._peeked) { state._peeked.classList.remove("peek"); state._peeked = null; } };
+    function peekAt(x, y) {
+      const target = document.elementFromPoint(x, y);
+      const card = target && target.closest && target.closest(".wheel-card");
+      if (card && !card.classList.contains("picked")) peekCard(card);
+      else unpeek();
+    }
+    wrap.addEventListener("pointerdown", e => {
+      if (state._drawing || !state._wheelReady) return;
+      pdown = true; lastX = e.clientX; moved = 0; state._suppressClick = false;
+      try { wrap.setPointerCapture(e.pointerId); } catch (er) {}
+    });
+    wrap.addEventListener("pointermove", e => {
+      if (state._drawing) return;
+      if (pdown) {
+        const dx = e.clientX - lastX; lastX = e.clientX; moved += Math.abs(dx);
+        if (moved > 6) {                       // 判定为拖动 → 旋转牌轮
+          state._suppressClick = true; unpeek();
+          rot += dx * 0.16; applyRot();
+        }
+      } else if (e.pointerType === "mouse" && state._wheelReady) {
+        peekAt(e.clientX, e.clientY);          // 鼠标悬停预览
+      }
+    });
+    const endDrag = e => { pdown = false; try { wrap.releasePointerCapture(e.pointerId); } catch (er) {} };
+    wrap.addEventListener("pointerup", endDrag);
+    wrap.addEventListener("pointercancel", endDrag);
+    wrap.addEventListener("mouseleave", () => { if (!pdown) unpeek(); });
   }
 
   function updateHint(hintEl, chosen, need) {
