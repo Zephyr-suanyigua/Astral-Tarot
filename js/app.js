@@ -332,8 +332,8 @@
       const even = (pass % 2 === 0);
       const cf = even ? f : (1 - f);                 // 视觉左→右位置;奇数段反向 → 首尾相连
       const x = (8 + cf * 84).toFixed(2);            // 横向 8%..92%
-      const y = (15 + t * 62 - Math.sin(f * Math.PI) * 5).toFixed(2); // 逐段下移(自带微斜)+ 每段向上微拱
-      const rot = ((cf - 0.5) * 13 + (even ? 5 : -5)).toFixed(2);     // 浅扇 + 微微倾斜
+      const y = (24 + pass * 22 - Math.sin(f * Math.PI) * 6).toFixed(2); // 每段大体水平(两端同高)+ 向上微拱;换行落差在拐点
+      const rot = ((cf - 0.5) * 14 + (even ? 4 : -4)).toFixed(2);        // 浅扇 + 微微倾斜
       const c = el("div", "fan-card");
       c.appendChild(ornateBack());
       c.style.setProperty("--x", x + "%");
