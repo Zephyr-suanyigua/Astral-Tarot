@@ -335,13 +335,13 @@
       const topY = 24, botY = 72, arch = 12;
       const x = (5 + cf * 90).toFixed(2);            // 横向 5%..95%(铺更宽,露出更多)
       let y, rot;
-      if (pass === 1) {                               // 第二段:斜段(也带弧度)
+      if (pass === 1) {                               // 第二段:斜段(带弧度 + 扇形张开)
         y = (topY + (botY - topY) * f - Math.sin(f * Math.PI) * 9).toFixed(2);
-        rot = (-15 + (cf - 0.5) * 6).toFixed(2);
-      } else {                                        // 第一/三段:水平 + 向上微拱
+        rot = (-13 + (cf - 0.5) * 22).toFixed(2);
+      } else {                                        // 第一/三段:水平 + 向上微拱 + 扇形张开
         const baseY = (pass === 0) ? topY : botY;
         y = (baseY - Math.sin(f * Math.PI) * arch).toFixed(2);
-        rot = ((cf - 0.5) * 12).toFixed(2);
+        rot = ((cf - 0.5) * 26).toFixed(2);           // 端点角度大、中间接近竖直
       }
       const c = el("div", "fan-card");
       c.appendChild(ornateBack());
