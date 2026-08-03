@@ -332,11 +332,11 @@
       const even = (pass % 2 === 0);
       const cf = even ? f : (1 - f);                 // 视觉左→右位置;奇数段反向 → 首尾相连
       // 首尾相连的 Z:第一、三段水平(两端同高)+ 向上微拱;第二段为倾斜的对角连接(右上→左下)
-      const topY = 24, botY = 72, arch = 10;
-      const x = (6 + cf * 88).toFixed(2);            // 横向 6%..94%
+      const topY = 24, botY = 72, arch = 12;
+      const x = (5 + cf * 90).toFixed(2);            // 横向 5%..95%(铺更宽,露出更多)
       let y, rot;
-      if (pass === 1) {                               // 第二段:斜段
-        y = (topY + (botY - topY) * f - Math.sin(f * Math.PI) * 3).toFixed(2);
+      if (pass === 1) {                               // 第二段:斜段(也带弧度)
+        y = (topY + (botY - topY) * f - Math.sin(f * Math.PI) * 9).toFixed(2);
         rot = (-15 + (cf - 0.5) * 6).toFixed(2);
       } else {                                        // 第一/三段:水平 + 向上微拱
         const baseY = (pass === 0) ? topY : botY;

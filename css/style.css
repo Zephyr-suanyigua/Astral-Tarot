@@ -177,7 +177,7 @@ h1,h2,h3{font-weight:600;}
 .pick-hint b{color:var(--gold-bright);}
 /* 候选牌:三行·向上微拱的浅扇·Z 字折叠(完整 78 张) */
 .fan{position:relative;width:100%;max-width:980px;height:min(70vh,600px);margin:2px auto 0;
-  --pcw:88px;--pch:147px;}
+  --pcw:80px;--pch:134px;}
 .fan-card{
   position:absolute;left:var(--x);top:var(--y);
   width:var(--pcw);height:var(--pch);
