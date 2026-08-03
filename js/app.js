@@ -318,24 +318,27 @@
     zone.appendChild(tray);
     s.appendChild(zone);
 
-    // 候选牌:数量随牌阵而变,沿下方 S 形波浪曲线铺开(仍从洗好的整副中随机取)
+    // 候选牌:数量随牌阵而变,沿"从上而下"的竖向 S 形曲线铺开(仍从洗好的整副中随机取)
     const fan = el("div", "fan snake"); s.appendChild(fan);
-    const poolSize = Math.min(44, Math.max(13, need * 7));
+    const poolSize = Math.min(34, Math.max(12, need * 6));
     const pool = state.deck.slice(0, poolSize);
     const n = pool.length;
     updateHint(hint, 0, need);
 
     pool.forEach((entry, idx) => {
-      const tt = n > 1 ? idx / (n - 1) : 0.5;          // 0..1
-      const phase = tt * Math.PI * 2;                   // 一个完整波 = 卧 S
-      const x = (7 + tt * 86).toFixed(2);               // 横向 7%..93%
-      const y = (50 - Math.sin(phase) * 21).toFixed(2); // 上下起伏 ±21%
-      const rot = (Math.cos(phase) * 20).toFixed(2);    // 沿曲线切线倾斜
+      const tt = n > 1 ? idx / (n - 1) : 0.5;          // 0..1 从上到下
+      const phase = tt * Math.PI * 2;                   // 一个完整波 = 竖向 S
+      const sinp = Math.sin(phase);
+      const y = (6 + tt * 86).toFixed(2);               // 纵向 6%..92%(从上而下)
+      const x = (50 + sinp * 22).toFixed(2);            // 横向蜿蜒 ±22%
+      const rot = (Math.cos(phase) * 15).toFixed(2);    // 沿切线倾斜
+      const side = sinp >= 0 ? 1 : -1;                  // 悬浮时向外露出的方向
       const c = el("div", "fan-card");
       c.appendChild(ornateBack());
       c.style.setProperty("--x", x + "%");
       c.style.setProperty("--y", y + "%");
       c.style.setProperty("--rot", rot + "deg");
+      c.style.setProperty("--side", String(side));
       c.style.setProperty("--delay", (idx * 14) + "ms");
       c.style.zIndex = String(idx);            // 自然叠压顺序 → 真实遮挡
       c.dataset.idx = idx;
