@@ -323,19 +323,17 @@
     const pool = state.deck;                       // 全部 78 张
     const n = pool.length;
     const rows = 3;
-    const perRow = Math.ceil(n / rows);            // 每行 26 张
     updateHint(hint, 0, need);
 
     pool.forEach((entry, idx) => {
-      const row = Math.floor(idx / perRow);
-      const inRow = idx - row * perRow;
-      const rowCount = Math.min(perRow, n - row * perRow);
-      const serp = (row % 2 === 1);
-      const col = serp ? (rowCount - 1 - inRow) : inRow;        // 蛇形:偶排左→右,奇排右→左 = Z
-      const cf = rowCount > 1 ? col / (rowCount - 1) : 0.5;      // 0..1(视觉左→右)
-      const x = (8 + cf * 84).toFixed(2);                        // 横向 8%..92%
-      const y = (21 + row * 29 - Math.sin(cf * Math.PI) * 7).toFixed(2); // 三行 + 向上微拱(中间更高)
-      const rot = ((cf - 0.5) * 16).toFixed(2);                 // 浅扇倾斜
+      const t = n > 1 ? idx / (n - 1) : 0.5;        // 0..1 沿一条连续蛇形路径
+      let u = t * rows, pass = Math.floor(u), f = u - pass;
+      if (pass >= rows) { pass = rows - 1; f = 1; }  // 收尾
+      const even = (pass % 2 === 0);
+      const cf = even ? f : (1 - f);                 // 视觉左→右位置;奇数段反向 → 首尾相连
+      const x = (8 + cf * 84).toFixed(2);            // 横向 8%..92%
+      const y = (15 + t * 62 - Math.sin(f * Math.PI) * 5).toFixed(2); // 逐段下移(自带微斜)+ 每段向上微拱
+      const rot = ((cf - 0.5) * 13 + (even ? 5 : -5)).toFixed(2);     // 浅扇 + 微微倾斜
       const c = el("div", "fan-card");
       c.appendChild(ornateBack());
       c.style.setProperty("--x", x + "%");
