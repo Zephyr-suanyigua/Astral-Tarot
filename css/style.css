@@ -175,9 +175,9 @@ h1,h2,h3{font-weight:600;}
 .pick-head{text-align:center;margin-bottom:8px;}
 .pick-hint{color:var(--ink-dim);font-size:14px;letter-spacing:1px;min-height:22px;}
 .pick-hint b{color:var(--gold-bright);}
-/* 候选牌:Z 字蛇形浅扇,从上折叠向下(完整 78 张) */
-.fan{position:relative;width:100%;max-width:940px;height:min(86vh,900px);margin:2px auto 0;
-  --pcw:82px;--pch:137px;}
+/* 候选牌:三行·向上微拱的浅扇·Z 字折叠(完整 78 张) */
+.fan{position:relative;width:100%;max-width:960px;height:min(70vh,600px);margin:2px auto 0;
+  --pcw:96px;--pch:160px;}
 .fan-card{
   position:absolute;left:var(--x);top:var(--y);
   width:var(--pcw);height:var(--pch);
@@ -570,7 +570,7 @@ h1,h2,h3{font-weight:600;}
 @media(max-width:640px){
   :root{--card-w:92px;--card-h:154px;--rcard-w:108px;--rcard-h:180px;}
   .title{font-size:34px;letter-spacing:10px;}
-  .fan{height:min(84vh,760px);--pcw:60px;--pch:100px;}
+  .fan{height:min(58vh,470px);--pcw:62px;--pch:103px;}
   .reading-item{gap:12px;padding:12px;}
   .reading-thumb{flex:0 0 80px;width:80px;height:134px;}
   .btn-primary,.btn-ghost{padding:11px 24px;font-size:15px;}
@@ -579,5 +579,5 @@ h1,h2,h3{font-weight:600;}
 @media(max-width:400px){
   :root{--card-w:80px;--card-h:134px;--rcard-w:94px;--rcard-h:157px;}
   .shuffle3d{--radius:100px;}
-  .fan{--pcw:52px;--pch:87px;}
+  .fan{--pcw:54px;--pch:90px;height:min(56vh,430px);}
 }

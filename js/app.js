@@ -318,13 +318,12 @@
     zone.appendChild(tray);
     s.appendChild(zone);
 
-    // 候选牌:完整 78 张,从待选框下方开始,Z 字蛇形浅扇一排排折叠向下
+    // 候选牌:完整 78 张,仅三行,每行"向上微拱"的浅扇,Z 字蛇形折叠(可密集)
     const fan = el("div", "fan snake"); s.appendChild(fan);
     const pool = state.deck;                       // 全部 78 张
     const n = pool.length;
-    const perRow = window.innerWidth < 560 ? 9 : 13;
-    const rows = Math.ceil(n / perRow);
-    const rowGap = 80 / rows;
+    const rows = 3;
+    const perRow = Math.ceil(n / rows);            // 每行 26 张
     updateHint(hint, 0, need);
 
     pool.forEach((entry, idx) => {
@@ -332,18 +331,18 @@
       const inRow = idx - row * perRow;
       const rowCount = Math.min(perRow, n - row * perRow);
       const serp = (row % 2 === 1);
-      const col = serp ? (rowCount - 1 - inRow) : inRow;        // 蛇形:偶排左→右,奇排右→左
-      const cf = rowCount > 1 ? col / (rowCount - 1) : 0.5;      // 0..1
-      const x = (9 + cf * 82).toFixed(2);                        // 横向 9%..91%
-      const y = (7 + row * rowGap).toFixed(2);                   // 逐排向下
-      const rot = (((cf - 0.5) * 24) * (serp ? -1 : 1)).toFixed(2); // 每排浅扇,方向交替 = Z
+      const col = serp ? (rowCount - 1 - inRow) : inRow;        // 蛇形:偶排左→右,奇排右→左 = Z
+      const cf = rowCount > 1 ? col / (rowCount - 1) : 0.5;      // 0..1(视觉左→右)
+      const x = (8 + cf * 84).toFixed(2);                        // 横向 8%..92%
+      const y = (21 + row * 29 - Math.sin(cf * Math.PI) * 7).toFixed(2); // 三行 + 向上微拱(中间更高)
+      const rot = ((cf - 0.5) * 16).toFixed(2);                 // 浅扇倾斜
       const c = el("div", "fan-card");
       c.appendChild(ornateBack());
       c.style.setProperty("--x", x + "%");
       c.style.setProperty("--y", y + "%");
       c.style.setProperty("--rot", rot + "deg");
-      c.style.setProperty("--delay", (idx * 6) + "ms");
-      c.style.zIndex = String(idx);            // 后面的(更下排)叠在上 → 自然遮挡
+      c.style.setProperty("--delay", (idx * 7) + "ms");
+      c.style.zIndex = String(idx);
       c.dataset.idx = idx;
       c.addEventListener("click", () => {
         if (state._suppressClick) { state._suppressClick = false; return; } // 刚才是滑动,不算选中
@@ -370,7 +369,7 @@
     fan.addEventListener("touchend", () => { if (state._didMove) state._suppressClick = true; });
 
     requestAnimationFrame(() => fan.classList.add("dealt"));
-    setTimeout(() => fan.classList.add("ready"), n * 6 + 500); // 铺开完成后允许即时弹动
+    setTimeout(() => fan.classList.add("ready"), n * 7 + 500); // 铺开完成后允许即时弹动
   }
 
   function updateHint(hintEl, chosen, need) {
