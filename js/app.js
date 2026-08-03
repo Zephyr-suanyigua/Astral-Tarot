@@ -367,12 +367,6 @@
       c.style.setProperty("--fdelay", ((idx % 14) * 0.16).toFixed(2) + "s"); // 浮动错峰
       c.style.zIndex = String(idx);
       c.dataset.idx = idx;
-      c.addEventListener("click", () => {
-        if (state._suppressClick) { state._suppressClick = false; return; }  // 刚才是拖动,不算选中
-        if (c.classList.contains("picked") || state._drawing || !state._wheelReady) return;
-        if (state._peeked === c) { c.classList.remove("peek"); state._peeked = null; confirmPick(c, entry, need, hint, tray); } // 已升起 → 再点选中
-        else peekCard(c);                                                    // 未升起 → 原地升起
-      });
       wheel.appendChild(c);
     });
 
@@ -394,14 +388,33 @@
     wheel.classList.add("wheel-in");
     setTimeout(() => { wheel.classList.remove("wheel-in"); state._wheelReady = true; }, 1150);
 
-    // 交互:左右拖动旋转牌轮;鼠标悬停/轻点使牌"原地升起"(相邻牌自然遮挡,露约 3/4)
+    // 交互:左右拖动旋转;用"几何角度"判定指针指向哪张牌(与遮挡无关 → 遮挡与选中两不误)
     let pdown = false, lastX = 0, moved = 0;
+    const angDiff = (a, b) => (((a - b) % 360) + 540) % 360 - 180;
+    function cardUnderCursor(x, y) {
+      const cards = wheel.children;
+      if (!cards.length) return null;
+      const wr = wheel.getBoundingClientRect();            // 0 尺寸元素 → 轮心屏幕坐标
+      const ox = wr.left, oy = wr.top, dx = x - ox, dy = y - oy;
+      const dist = Math.hypot(dx, dy);
+      const c0 = cards[0].getBoundingClientRect();
+      const R = Math.hypot(c0.left + c0.width / 2 - ox, c0.top + c0.height / 2 - oy);
+      if (dist < R * 0.5 || dist > R * 1.22) return null;  // 不在候选牌环带上
+      const ca = Math.atan2(dx, -dy) * 180 / Math.PI;      // 从正上方起、顺时针的角度
+      let best = null, bestd = 1e9;
+      for (let i = 0; i < cards.length; i++) {
+        if (cards[i].classList.contains("picked")) continue;
+        const d = Math.abs(angDiff(i * step + rot, ca));
+        if (d < bestd) { bestd = d; best = cards[i]; }
+      }
+      return (best && bestd < step * 1.6) ? best : null;
+    }
     const unpeek = () => { if (state._peeked) { state._peeked.classList.remove("peek"); state._peeked = null; } };
-    function peekAt(x, y) {
-      const target = document.elementFromPoint(x, y);
-      const card = target && target.closest && target.closest(".wheel-card");
-      if (card && !card.classList.contains("picked")) peekCard(card);
-      else unpeek();
+    function peekTarget(card) {
+      if (!card) { unpeek(); return; }
+      if (state._peeked === card) return;
+      if (state._peeked) state._peeked.classList.remove("peek");
+      card.classList.add("peek"); state._peeked = card;
     }
     stage.addEventListener("pointerdown", e => {
       if (state._drawing || !state._wheelReady) return;
@@ -412,18 +425,26 @@
       if (state._drawing) return;
       if (pdown) {
         const dx = e.clientX - lastX; lastX = e.clientX; moved += Math.abs(dx);
-        if (moved > 6) {                       // 判定为拖动 → 旋转牌轮
-          state._suppressClick = true; unpeek();
-          rot += dx * 0.16; applyRot();
-        }
+        if (moved > 6) { state._suppressClick = true; unpeek(); rot += dx * 0.16; applyRot(); } // 拖动 → 旋转
       } else if (e.pointerType === "mouse" && state._wheelReady) {
-        peekAt(e.clientX, e.clientY);          // 鼠标悬停
+        peekTarget(cardUnderCursor(e.clientX, e.clientY));   // 悬停 → 升起指向的牌
       }
     });
     const endDrag = e => { pdown = false; try { stage.releasePointerCapture(e.pointerId); } catch (er) {} };
     stage.addEventListener("pointerup", endDrag);
     stage.addEventListener("pointercancel", endDrag);
     stage.addEventListener("mouseleave", () => { if (!pdown) unpeek(); });
+    // 点击/轻点:命中"当前升起的牌"则选中;否则先升起(触屏第一下升起,第二下选中)
+    stage.addEventListener("click", e => {
+      if (state._suppressClick) { state._suppressClick = false; return; }   // 刚才是拖动
+      if (state._drawing || !state._wheelReady) return;
+      const c = cardUnderCursor(e.clientX, e.clientY);
+      if (!c) return;
+      if (state._peeked === c) {
+        c.classList.remove("peek"); state._peeked = null;
+        confirmPick(c, state.deck[parseInt(c.dataset.idx, 10)], need, hint, tray);
+      } else peekTarget(c);
+    });
   }
 
   function updateHint(hintEl, chosen, need) {
