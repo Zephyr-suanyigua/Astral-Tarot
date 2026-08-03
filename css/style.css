@@ -137,25 +137,23 @@ h1,h2,h3{font-weight:600;}
 .spread-count{color:var(--azure);font-size:12px;margin:3px 0 6px;letter-spacing:1px;}
 .spread-desc{color:var(--ink-dim);font-size:13px;line-height:1.6;}
 
-/* ---------- 洗牌动画:裸眼 3D 旋转牌环 ---------- */
-.shuffle-wrap{text-align:center;padding:15vh 0 0;}
-.shuffle3d{position:relative;width:var(--card-w);height:var(--card-h);margin:0 auto;
-  --radius:170px;perspective:1100px;}
+/* ---------- 洗牌动画:密集连续的旋转卡牌鼓(无限延伸) ---------- */
+.shuffle-wrap{text-align:center;padding:14vh 0 0;}
+.shuffle3d{position:relative;width:74px;height:124px;margin:0 auto;
+  --radius:178px;perspective:900px;opacity:0;transform:scale(.5);}
+.shuffle3d.go{animation:shufIn .7s cubic-bezier(.2,.9,.3,1) forwards;}
+@keyframes shufIn{to{opacity:1;transform:scale(1);}}
 .shuffle3d .ring{position:absolute;inset:0;transform-style:preserve-3d;
-  transform:rotateX(-14deg);}
-.shuffle3d.go .ring{animation:ringSpin 2.9s cubic-bezier(.45,.05,.25,1) forwards;}
+  animation:ringSpin 8s linear infinite;}
 @keyframes ringSpin{
-  0%{transform:rotateX(-14deg) rotateY(0deg) scale(.45);opacity:0;}
-  12%{opacity:1;}
-  86%{opacity:1;}
-  100%{transform:rotateX(-14deg) rotateY(1080deg) scale(1);}
+  from{transform:rotateX(-16deg) rotateY(0deg);}
+  to{transform:rotateX(-16deg) rotateY(360deg);}
 }
-.ring-card{position:absolute;inset:0;border-radius:12px;
-  transform:rotateY(var(--a)) translateZ(var(--radius));
-  backface-visibility:hidden;
-  box-shadow:0 0 18px rgba(90,60,170,.45);}
-.ring-card .card-back{position:absolute;inset:0;}
-.shuffle-text{margin-top:70px;color:var(--gold);letter-spacing:4px;font-size:15px;
+.ring-card{position:absolute;inset:0;border-radius:9px;
+  transform:rotateY(var(--a)) translateZ(var(--radius));}
+.ring-card .card-back{position:absolute;inset:0;border-radius:9px;
+  box-shadow:0 0 14px rgba(90,60,170,.42);}
+.shuffle-text{margin-top:82px;color:var(--gold);letter-spacing:4px;font-size:15px;
   animation:pulse 1.6s ease-in-out infinite;}
 @keyframes pulse{0%,100%{opacity:.5;}50%{opacity:1;}}
 
@@ -177,50 +175,26 @@ h1,h2,h3{font-weight:600;}
 .pick-head{text-align:center;margin-bottom:8px;}
 .pick-hint{color:var(--ink-dim);font-size:14px;letter-spacing:1px;min-height:22px;}
 .pick-hint b{color:var(--gold-bright);}
-.fan{
-  position:relative;width:100%;height:360px;margin:20px auto 0;
-  perspective:1400px;
-}
+/* 候选牌:下半部分 S 形波浪缎带 */
+.fan{position:relative;width:100%;max-width:980px;height:340px;margin:8px auto 0;}
 .fan-card{
-  position:absolute;left:50%;top:80%;
-  width:var(--card-w);height:var(--card-h);margin-left:calc(var(--card-w) / -2);
-  transform-origin:50% 130%;
-  transform:rotate(0deg) translateY(300px);
+  position:absolute;left:var(--x);top:var(--y);
+  width:var(--card-w);height:var(--card-h);
+  transform:translate(-50%,-50%) rotate(var(--rot)) translateY(190px);
   opacity:0;cursor:pointer;
-  transition:transform .5s cubic-bezier(.2,.8,.3,1),opacity .5s;
+  transition:transform .32s cubic-bezier(.2,.85,.3,1),opacity .32s,filter .26s;
   transition-delay:var(--delay);
 }
-.fan.dealt .fan-card{
-  opacity:1;
-  transform:rotate(var(--ang)) translateY(0);
-}
-/* 未选中且未弹起的牌:轻微漂浮 */
-.fan.dealt .fan-card:not(.picked):not(.peek){
-  animation:floatCard 3.6s ease-in-out infinite;
-  animation-delay:calc(var(--idx) * 80ms);
-}
-@keyframes floatCard{
-  0%,100%{filter:brightness(1);}
-  50%{transform:rotate(var(--ang)) translateY(calc(var(--float) * -12px)) scale(1.01);
-    filter:brightness(1.1);}
-}
-/* 划到/悬停:弹出到约 3/4 的位置 */
-.fan.dealt .fan-card.peek{
-  transform:rotate(var(--ang)) translateY(-62%) scale(1.08);
-  z-index:60;animation:none;
-  filter:brightness(1.22) drop-shadow(0 0 20px rgba(231,200,106,.8));
-  transition:transform .26s cubic-bezier(.2,.9,.3,1), filter .26s;
+.fan.dealt .fan-card{opacity:1;transform:translate(-50%,-50%) rotate(var(--rot)) translateY(0);}
+/* 铺开完成后取消错峰延迟 → 弹起/落下即时顺滑 */
+.fan.ready .fan-card{transition-delay:0s;}
+/* 划到/悬停:仅上浮露出上半部,保留与相邻牌的真实叠压(不完全裸露、层级不变) */
+.fan.ready .fan-card.peek{
+  transform:translate(-50%,-50%) rotate(var(--rot)) translateY(-46%) scale(1.05);
+  filter:brightness(1.18) drop-shadow(0 0 15px rgba(231,200,106,.7));
 }
 .pick-tip{color:var(--ink-dim);font-size:12.5px;letter-spacing:1px;margin:2px 0 6px;opacity:.85;}
-.fan-card .back,.fan-card.back{width:100%;height:100%;}
-.fan-card.back{}
-.fan-card.picked.lifted{
-  transform:rotate(var(--ang)) translateY(-140px) scale(1.12);
-  opacity:0;
-  filter:drop-shadow(0 0 30px rgba(231,200,106,1));
-  transition:transform .8s cubic-bezier(.4,0,.2,1),opacity .8s;
-  animation:none;
-}
+.fan-card .card-back{width:100%;height:100%;}
 
 /* ---------- 解读:牌桌 + 翻牌 ---------- */
 .read-head{text-align:center;margin-bottom:10px;}
@@ -344,10 +318,18 @@ h1,h2,h3{font-weight:600;}
 .cb-moon{position:absolute;left:50%;top:13%;width:7px;height:7px;border-radius:50%;transform:translateX(-50%);
   background:var(--gold-bright);box-shadow:0 0 10px var(--gold-bright);}
 
-/* 扇形牌改用元素化卡背 */
+/* 选牌:元素化卡背;选中后原牌淡出(飞行副本由 JS 生成) */
 .fan-card .card-back{position:absolute;inset:0;}
-.fan-card.picked{opacity:0;transform:rotate(var(--ang)) translateY(-70px) scale(.55);
-  transition:opacity .5s ease, transform .5s ease;pointer-events:none;animation:none;}
+.fan-card.picked{opacity:0;transform:translate(-50%,-50%) rotate(var(--rot)) scale(.6);
+  transition:opacity .45s ease, transform .45s ease;pointer-events:none;}
+
+/* 收集区(已抽取)——与候选牌分离 */
+.draw-zone{max-width:520px;margin:2px auto 6px;padding:10px 14px 4px;
+  border:1px solid rgba(231,200,106,.2);border-radius:14px;
+  background:rgba(20,12,44,.32);}
+.draw-zone-label{text-align:center;font-family:"Cinzel",serif;font-size:12px;letter-spacing:4px;
+  color:var(--gold-dim);margin-bottom:8px;}
+.draw-tray{margin:0 auto;}
 
 /* 顶层特效画布 */
 #draw-fx{position:fixed;inset:0;z-index:80;pointer-events:none;overflow:hidden;}
@@ -434,22 +416,23 @@ h1,h2,h3{font-weight:600;}
   --ink:#eae2d0; --ink-dim:#b1a186;
 }
 [data-theme="gothic"] body{
-  background:radial-gradient(circle at 50% -12%, #2c0d16 0%, #100509 44%, #030203 100%);
+  background:radial-gradient(circle at 50% -14%, #260b13 0%, #0b0407 42%, #010101 100%);
   font-family:"Cormorant Garamond","EB Garamond","Noto Serif SC",serif;
 }
-/* 幽暗晕影,四周更深邃,聚光于中央 */
+/* 幽暗晕影:四周近乎全黑,聚光于中央 */
 [data-theme="gothic"] body::before{
   content:"";position:fixed;inset:0;z-index:1;pointer-events:none;
   background:
-    radial-gradient(ellipse at 50% 34%, transparent 38%, rgba(0,0,0,.42) 72%, rgba(0,0,0,.72) 100%),
-    radial-gradient(circle at 50% 8%, rgba(139,30,45,.16), transparent 46%);
+    radial-gradient(ellipse at 50% 32%, transparent 30%, rgba(0,0,0,.55) 66%, rgba(0,0,0,.86) 100%),
+    radial-gradient(circle at 50% 6%, rgba(139,30,45,.18), transparent 44%);
 }
 [data-theme="gothic"] .app{font-size:17px;}
 [data-theme="gothic"] .title{
-  font-family:"UnifrakturCook","Cinzel",serif;font-weight:700;letter-spacing:2px;
-  background:linear-gradient(120deg,#f6e6b0,#c9a24b 45%,#a52633);
+  font-family:"UnifrakturMaguntia","UnifrakturCook","Cinzel",serif;font-weight:400;letter-spacing:1px;
+  font-size:52px;line-height:1.05;
+  background:linear-gradient(120deg,#f8ecc2,#caa24a 42%,#8f1f2c 78%,#5e1420);
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-  filter:drop-shadow(0 0 22px rgba(165,38,51,.6)) drop-shadow(0 0 4px rgba(0,0,0,.7));
+  filter:drop-shadow(0 0 22px rgba(165,38,51,.6)) drop-shadow(0 0 5px rgba(0,0,0,.85));
 }
 [data-theme="gothic"] .subtitle{font-family:"Pirata One",serif;letter-spacing:6px;color:var(--gold-dim);}
 [data-theme="gothic"] .panel-title{font-family:"Pirata One","Cinzel",serif;letter-spacing:2px;

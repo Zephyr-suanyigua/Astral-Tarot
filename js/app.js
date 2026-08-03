@@ -28,6 +28,7 @@
       pickTip: "Glide across the cards — a card rises as you pass; tap a raised card to claim it.",
       pickHint: (c, n) => "Pick card <b>" + (c + 1) + "</b> &nbsp;·&nbsp; chosen " + c + " / " + n,
       pickDone: n => "All " + n + " chosen — revealing your reading…",
+      drawnLabel: "DRAWN",
       upright: "Upright", reversed: "Reversed", revShort: "R",
       domains: { general: "Overview", love: "Love", career: "Career", wealth: "Wealth", health: "Health" },
       summaryTitle: "Star Reading",
@@ -65,6 +66,7 @@
       pickTip: "手指划过牌面,划到的牌会弹起;再点一下弹起的牌即可选定。",
       pickHint: (c, n) => "请选择第 <b>" + (c + 1) + "</b> 张牌 &nbsp;·&nbsp; 已选 " + c + " / " + n,
       pickDone: n => "已选满 " + n + " 张,正在为你揭示……",
+      drawnLabel: "已抽取",
       upright: "正位", reversed: "逆位", revShort: "逆",
       domains: { general: "综合", love: "爱情", career: "事业", wealth: "财运", health: "健康" },
       summaryTitle: "星语综述",
@@ -245,7 +247,7 @@
     const wrap = el("div", "shuffle-wrap");
     const stage = el("div", "shuffle3d");
     const ring = el("div", "ring");
-    const N = 20;
+    const N = 22;
     for (let i = 0; i < N; i++) {
       const c = el("div", "ring-card");
       c.appendChild(ornateBack());
@@ -304,28 +306,38 @@
     const hint = el("p", "pick-hint", ""); head.appendChild(hint);
     s.appendChild(head);
 
-    const fan = el("div", "fan"); s.appendChild(fan);
-
-    // 底部抽牌收集托盘
+    // 收集区(置于上方,与候选牌分离):带标题的"已抽取"槽位
+    const zone = el("div", "draw-zone");
+    zone.appendChild(el("div", "draw-zone-label", t().drawnLabel));
     const tray = el("div", "draw-tray");
     for (let i = 0; i < need; i++) {
       const slot = el("div", "tray-slot"); slot.dataset.i = i;
       slot.appendChild(el("span", "tray-num", String(i + 1)));
       tray.appendChild(slot);
     }
-    s.appendChild(tray);
+    zone.appendChild(tray);
+    s.appendChild(zone);
 
-    const total = state.deck.length;
-    const spreadAngle = 158, start = -spreadAngle / 2, stepA = spreadAngle / (total - 1);
+    // 候选牌:数量随牌阵而变,沿下方 S 形波浪曲线铺开(仍从洗好的整副中随机取)
+    const fan = el("div", "fan snake"); s.appendChild(fan);
+    const poolSize = Math.min(44, Math.max(13, need * 7));
+    const pool = state.deck.slice(0, poolSize);
+    const n = pool.length;
     updateHint(hint, 0, need);
 
-    state.deck.forEach((entry, idx) => {
+    pool.forEach((entry, idx) => {
+      const tt = n > 1 ? idx / (n - 1) : 0.5;          // 0..1
+      const phase = tt * Math.PI * 2;                   // 一个完整波 = 卧 S
+      const x = (7 + tt * 86).toFixed(2);               // 横向 7%..93%
+      const y = (50 - Math.sin(phase) * 21).toFixed(2); // 上下起伏 ±21%
+      const rot = (Math.cos(phase) * 20).toFixed(2);    // 沿曲线切线倾斜
       const c = el("div", "fan-card");
       c.appendChild(ornateBack());
-      c.style.setProperty("--ang", (start + stepA * idx).toFixed(2) + "deg");
-      c.style.setProperty("--idx", idx);
-      c.style.setProperty("--delay", (idx * 9) + "ms");
-      c.style.setProperty("--float", (rand() * 2 - 1).toFixed(3));
+      c.style.setProperty("--x", x + "%");
+      c.style.setProperty("--y", y + "%");
+      c.style.setProperty("--rot", rot + "deg");
+      c.style.setProperty("--delay", (idx * 14) + "ms");
+      c.style.zIndex = String(idx);            // 自然叠压顺序 → 真实遮挡
       c.dataset.idx = idx;
       c.addEventListener("click", () => {
         if (state._suppressClick) { state._suppressClick = false; return; } // 刚才是滑动,不算选中
@@ -352,6 +364,7 @@
     fan.addEventListener("touchend", () => { if (state._didMove) state._suppressClick = true; });
 
     requestAnimationFrame(() => fan.classList.add("dealt"));
+    setTimeout(() => fan.classList.add("ready"), pool.length * 14 + 600); // 铺开完成后允许即时弹动
   }
 
   function updateHint(hintEl, chosen, need) {
