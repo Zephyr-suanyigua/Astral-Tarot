@@ -183,7 +183,7 @@ h1,h2,h3{font-weight:600;}
 /* "已抽取"框:置于舞台顶部、层级较低,升起的牌(层级更高)会盖过它 */
 .pick-stage .draw-zone{position:absolute;top:2px;left:50%;transform:translateX(-50%);
   width:calc(100% - 12px);max-width:520px;margin:0;z-index:40;pointer-events:none;}
-.wheel{position:absolute;left:50%;top:calc(var(--wheel-r) + 30vh);width:0;height:0;
+.wheel{position:absolute;left:50%;top:calc(var(--wheel-r) + 35vh);width:0;height:0;z-index:50;
   transform:rotate(var(--rot,0deg));will-change:transform;}
 .wheel-card{position:absolute;left:0;top:0;width:var(--pcw);height:var(--pch);
   margin-left:calc(var(--pcw) / -2);margin-top:calc(var(--pch) / -2);
