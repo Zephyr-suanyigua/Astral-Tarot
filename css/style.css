@@ -194,6 +194,13 @@ h1,h2,h3{font-weight:600;}
   transform:rotate(var(--wang)) translateY(calc(-1 * var(--wheel-r) - var(--pch) * .45)) scale(1.05);
   filter:brightness(1.2) drop-shadow(0 0 16px rgba(231,200,106,.8));}
 .wheel-card.picked{opacity:0;pointer-events:none;transition:opacity .3s ease;}
+/* 悬停升起的预览牌:置于最顶层浮层,不被待选框遮挡、不被裁剪 */
+.peek-preview{position:fixed;z-index:5000;pointer-events:none;border-radius:12px;
+  transform:translate(-50%,-50%) rotate(var(--pa)) translateY(0) scale(1);
+  transition:transform .26s cubic-bezier(.2,.85,.3,1),filter .26s;
+  filter:brightness(1.16) drop-shadow(0 0 18px rgba(231,200,106,.85));}
+.peek-preview.on{transform:translate(-50%,-50%) rotate(var(--pa)) translateY(-46%) scale(1.06);}
+.peek-preview .card-back{width:100%;height:100%;}
 /* 入场:中心一摞 → 下移 → 顺时针旋出成轮 */
 .wheel.wheel-in{animation:wheelIn 1.15s cubic-bezier(.2,.8,.25,1);}
 @keyframes wheelIn{
