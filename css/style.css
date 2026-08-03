@@ -176,11 +176,11 @@ h1,h2,h3{font-weight:600;}
 .pick-hint{color:var(--ink-dim);font-size:14px;letter-spacing:1px;min-height:22px;}
 .pick-hint b{color:var(--gold-bright);}
 /* 候选牌:屏幕下方的巨型旋转牌轮(只露出顶部一小段弧) */
-.wheel-wrap{position:relative;width:100%;max-width:1400px;height:min(64vh,640px);margin:4px auto 0;
-  overflow:hidden;--pcw:120px;--pch:200px;--wheel-r:76vh;
+.wheel-wrap{position:relative;width:100%;max-width:1500px;height:min(66vh,680px);margin:4px auto 0;
+  overflow:hidden;--pcw:142px;--pch:236px;--wheel-r:78vh;
   touch-action:pan-y;cursor:grab;}
 .wheel-wrap:active{cursor:grabbing;}
-.wheel{position:absolute;left:50%;top:calc(var(--wheel-r) + 12vh);width:0;height:0;
+.wheel{position:absolute;left:50%;top:calc(var(--wheel-r) + 21vh);width:0;height:0;
   transform:rotate(var(--rot,0deg));will-change:transform;}
 .wheel-card{position:absolute;left:0;top:0;width:var(--pcw);height:var(--pch);
   margin-left:calc(var(--pcw) / -2);margin-top:calc(var(--pch) / -2);
@@ -576,7 +576,7 @@ h1,h2,h3{font-weight:600;}
 @media(max-width:640px){
   :root{--card-w:92px;--card-h:154px;--rcard-w:108px;--rcard-h:180px;}
   .title{font-size:34px;letter-spacing:10px;}
-  .wheel-wrap{height:min(60vh,540px);--pcw:94px;--pch:157px;--wheel-r:64vh;}
+  .wheel-wrap{height:min(62vh,560px);--pcw:112px;--pch:187px;--wheel-r:66vh;}
   .reading-item{gap:12px;padding:12px;}
   .reading-thumb{flex:0 0 80px;width:80px;height:134px;}
   .btn-primary,.btn-ghost{padding:11px 24px;font-size:15px;}
@@ -585,5 +585,5 @@ h1,h2,h3{font-weight:600;}
 @media(max-width:400px){
   :root{--card-w:80px;--card-h:134px;--rcard-w:94px;--rcard-h:157px;}
   .shuffle3d{--radius:100px;}
-  .wheel-wrap{--pcw:80px;--pch:133px;--wheel-r:58vh;height:min(56vh,470px);}
+  .wheel-wrap{--pcw:96px;--pch:160px;--wheel-r:60vh;height:min(58vh,490px);}
 }

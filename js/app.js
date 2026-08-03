@@ -346,9 +346,17 @@
       wheel.appendChild(c);
     });
 
-    // 旋转状态
+    // 旋转状态 + 动态层级:越靠近顶部中央的牌层级越高,向两侧递减 → 叠压一致不乱
     let rot = 0;
-    const applyRot = () => wheel.style.setProperty("--rot", rot.toFixed(2) + "deg");
+    function updateZ() {
+      const cards = wheel.children;
+      for (let i = 0; i < cards.length; i++) {
+        let a = ((i * step + rot) % 360 + 360) % 360;   // 当前有效角度
+        if (a > 180) a -= 360;
+        cards[i].style.zIndex = String(1000 - Math.round(Math.abs(a)));
+      }
+    }
+    const applyRot = () => { wheel.style.setProperty("--rot", rot.toFixed(2) + "deg"); updateZ(); };
     applyRot();
 
     // 入场:中心一摞 → 下移 → 顺时针旋出成轮
