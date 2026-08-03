@@ -318,22 +318,32 @@
     zone.appendChild(tray);
     s.appendChild(zone);
 
-    // 候选牌:折叠向下的扇形,尽可能摊开展现所有候选牌(仍从洗好的整副中随机取)
-    const fan = el("div", "fan"); s.appendChild(fan);
-    const poolSize = Math.min(30, Math.max(12, need * 6));
-    const pool = state.deck.slice(0, poolSize);
+    // 候选牌:完整 78 张,从待选框下方开始,Z 字蛇形浅扇一排排折叠向下
+    const fan = el("div", "fan snake"); s.appendChild(fan);
+    const pool = state.deck;                       // 全部 78 张
     const n = pool.length;
-    const spreadAngle = Math.min(126, 18 + n * 3.6);   // 牌越多扇面越宽
-    const start = -spreadAngle / 2, stepA = n > 1 ? spreadAngle / (n - 1) : 0;
+    const perRow = window.innerWidth < 560 ? 9 : 13;
+    const rows = Math.ceil(n / perRow);
+    const rowGap = 80 / rows;
     updateHint(hint, 0, need);
 
     pool.forEach((entry, idx) => {
-      const ang = (start + stepA * idx).toFixed(2);
+      const row = Math.floor(idx / perRow);
+      const inRow = idx - row * perRow;
+      const rowCount = Math.min(perRow, n - row * perRow);
+      const serp = (row % 2 === 1);
+      const col = serp ? (rowCount - 1 - inRow) : inRow;        // 蛇形:偶排左→右,奇排右→左
+      const cf = rowCount > 1 ? col / (rowCount - 1) : 0.5;      // 0..1
+      const x = (9 + cf * 82).toFixed(2);                        // 横向 9%..91%
+      const y = (7 + row * rowGap).toFixed(2);                   // 逐排向下
+      const rot = (((cf - 0.5) * 24) * (serp ? -1 : 1)).toFixed(2); // 每排浅扇,方向交替 = Z
       const c = el("div", "fan-card");
       c.appendChild(ornateBack());
-      c.style.setProperty("--ang", ang + "deg");
-      c.style.setProperty("--delay", (idx * 14) + "ms");
-      c.style.zIndex = String(idx);            // 右侧牌叠在上 → 自然遮挡
+      c.style.setProperty("--x", x + "%");
+      c.style.setProperty("--y", y + "%");
+      c.style.setProperty("--rot", rot + "deg");
+      c.style.setProperty("--delay", (idx * 6) + "ms");
+      c.style.zIndex = String(idx);            // 后面的(更下排)叠在上 → 自然遮挡
       c.dataset.idx = idx;
       c.addEventListener("click", () => {
         if (state._suppressClick) { state._suppressClick = false; return; } // 刚才是滑动,不算选中
@@ -360,7 +370,7 @@
     fan.addEventListener("touchend", () => { if (state._didMove) state._suppressClick = true; });
 
     requestAnimationFrame(() => fan.classList.add("dealt"));
-    setTimeout(() => fan.classList.add("ready"), pool.length * 14 + 600); // 铺开完成后允许即时弹动
+    setTimeout(() => fan.classList.add("ready"), n * 6 + 500); // 铺开完成后允许即时弹动
   }
 
   function updateHint(hintEl, chosen, need) {
@@ -387,69 +397,75 @@
     });
   }
 
-  // 抽卡华丽特效:牌飞向中央放大发光 → 停顿 → 飞入底部托盘
+  // 抽卡华丽特效:牌飞向中央 → 翻面放大揭示 → 正面飞入待选框
   function flourishDraw(fanCardEl, tray, posIndex, done) {
     const overlay = fxLayer();
+    const p = state.picked[posIndex];
     const rect = fanCardEl.getBoundingClientRect();
     const cw = fanCardEl.offsetWidth, ch = fanCardEl.offsetHeight;
     const sx = rect.left + rect.width / 2, sy = rect.top + rect.height / 2;
     const cx = window.innerWidth / 2, cy = window.innerHeight * 0.42;
     const traySlot = tray.querySelector('.tray-slot[data-i="' + posIndex + '"]');
 
-    // 光环 + 光芒
     const aura = el("div", "draw-aura");
     aura.style.left = cx + "px"; aura.style.top = cy + "px";
     overlay.appendChild(aura);
     requestAnimationFrame(() => aura.classList.add("on"));
 
-    // 飞行的牌
+    // 飞行的牌(含翻面结构:背面 → 正面)
     const fly = el("div", "fly-card");
     fly.style.width = cw + "px"; fly.style.height = ch + "px";
     fly.style.left = (sx - cw / 2) + "px"; fly.style.top = (sy - ch / 2) + "px";
-    fly.appendChild(ornateBack());
+    const flip = el("div", "flip-card");
+    const inner = el("div", "flip-inner");
+    const back = el("div", "flip-face flip-back"); back.appendChild(ornateBack());
+    const front = el("div", "flip-face flip-front"); if (p.reversed) front.classList.add("reversed");
+    const fimg = el("img", "card-img"); fimg.src = p.card.img; fimg.alt = cName(p.card);
+    fimg.addEventListener("error", () => fimg.replaceWith(cardFallback(p.card)));
+    front.appendChild(fimg);
+    front.appendChild(el("div", "card-cap", cName(p.card) + (p.reversed ? " (" + t().revShort + ")" : "")));
+    inner.appendChild(back); inner.appendChild(front); flip.appendChild(inner); fly.appendChild(flip);
     overlay.appendChild(fly);
 
     const scale = Math.min(2.6, (window.innerHeight * 0.5) / ch);
     const toCX = cx - sx, toCY = cy - sy;
 
-    const supportsWAAPI = typeof fly.animate === "function";
-    if (!supportsWAAPI) { // 极端降级:直接完成
-      fly.remove(); aura.remove(); fillTray(traySlot); done && done(); return;
-    }
+    if (typeof fly.animate !== "function") { fly.remove(); aura.remove(); fillTrayFace(traySlot, p); done && done(); return; }
 
     const a1 = fly.animate([
       { transform: "translate(0,0) rotate(-8deg) scale(1)", filter: "brightness(1)" },
-      { transform: "translate(" + toCX + "px," + toCY + "px) rotate(0deg) scale(" + scale + ")", filter: "brightness(1.35) drop-shadow(0 0 26px rgba(231,200,106,.9))" }
-    ], { duration: 640, easing: "cubic-bezier(.18,.9,.24,1)", fill: "forwards" });
+      { transform: "translate(" + toCX + "px," + toCY + "px) rotate(0deg) scale(" + scale + ")", filter: "brightness(1.32) drop-shadow(0 0 26px rgba(231,200,106,.9))" }
+    ], { duration: 620, easing: "cubic-bezier(.18,.9,.24,1)", fill: "forwards" });
 
     spawnSparks(overlay, cx, cy, 22);
 
     a1.onfinish = () => {
-      // 停顿蓄势
-      setTimeout(() => {
+      flip.classList.add("revealed");       // 抵达中央 → 翻面揭示
+      revealBurst(flip);
+      setTimeout(() => {                     // 停顿展示牌面
         const tr = traySlot.getBoundingClientRect();
         const toTX = (tr.left + tr.width / 2) - sx, toTY = (tr.top + tr.height / 2) - sy;
         const tScale = tr.width / cw;
         aura.classList.remove("on"); aura.classList.add("off");
         const a2 = fly.animate([
-          { transform: "translate(" + toCX + "px," + toCY + "px) scale(" + scale + ")", opacity: 1 },
-          { transform: "translate(" + toTX + "px," + toTY + "px) scale(" + tScale + ")", opacity: 0.9 }
-        ], { duration: 500, easing: "cubic-bezier(.6,0,.25,1)", fill: "forwards" });
-        a2.onfinish = () => {
-          fly.remove(); aura.remove();
-          fillTray(traySlot);
-          done && done();
-        };
-      }, 400);
+          { transform: "translate(" + toCX + "px," + toCY + "px) scale(" + scale + ")" },
+          { transform: "translate(" + toTX + "px," + toTY + "px) scale(" + tScale + ")" }
+        ], { duration: 520, easing: "cubic-bezier(.6,0,.25,1)", fill: "forwards" });
+        a2.onfinish = () => { fly.remove(); aura.remove(); fillTrayFace(traySlot, p); done && done(); };
+      }, 950);
     };
   }
 
-  function fillTray(slot) {
+  // 正面牌放入待选框
+  function fillTrayFace(slot, p) {
     if (!slot) return;
     slot.classList.add("filled"); slot.innerHTML = "";
-    const mini = ornateBack(); mini.classList.add("mini");
-    slot.appendChild(mini);
-    if (slot.animate) slot.animate([{ transform: "scale(.3)", opacity: 0 }, { transform: "scale(1.12)", opacity: 1, offset: .7 }, { transform: "scale(1)", opacity: 1 }], { duration: 340, easing: "cubic-bezier(.2,1.3,.4,1)" });
+    const box = el("div", "tray-face" + (p.reversed ? " rev" : ""));
+    const img = el("img", null); img.src = p.card.img; img.alt = cName(p.card);
+    img.addEventListener("error", () => img.replaceWith(cardFallback(p.card)));
+    box.appendChild(img);
+    slot.appendChild(box);
+    if (slot.animate) slot.animate([{ transform: "scale(.4)", opacity: 0 }, { transform: "scale(1.1)", opacity: 1, offset: .7 }, { transform: "scale(1)", opacity: 1 }], { duration: 320, easing: "cubic-bezier(.2,1.3,.4,1)" });
   }
 
   // 金色星尘粒子爆发
@@ -488,43 +504,37 @@
     const table = el("div", "table table-" + state.spread.id);
     s.appendChild(table);
 
+    // 牌已在抽取时揭示,这里直接以正面摆入牌阵
     const cardEls = [];
     state.picked.forEach(p => {
       const slot = el("div", "slot");
       slot.style.left = p.position.x + "%"; slot.style.top = p.position.y + "%";
       if (p.position.cross) slot.classList.add("cross");
-      const flip = el("div", "flip-card");
-      const inner = el("div", "flip-inner");
-      const back = el("div", "flip-face flip-back");
-      const front = el("div", "flip-face flip-front");
-      if (p.reversed) front.classList.add("reversed");
+      const face = el("div", "board-card" + (p.reversed ? " reversed" : ""));
       const img = el("img", "card-img");
       img.alt = cName(p.card); img.loading = "lazy"; img.src = p.card.img;
       img.addEventListener("error", () => img.replaceWith(cardFallback(p.card)));
-      front.appendChild(img);
-      front.appendChild(el("div", "card-cap", cName(p.card) + (p.reversed ? " (" + t().revShort + ")" : "")));
-      inner.appendChild(back); inner.appendChild(front);
-      flip.appendChild(inner); slot.appendChild(flip);
+      face.appendChild(img);
+      face.appendChild(el("div", "card-cap", cName(p.card) + (p.reversed ? " (" + t().revShort + ")" : "")));
+      slot.appendChild(face);
       slot.appendChild(el("div", "slot-label", posTitle(p.position)));
       table.appendChild(slot);
-      cardEls.push({ flip: flip, slot: slot });
+      cardEls.push({ node: face, slot: slot });
     });
 
     if (animated) {
-      // 入场:各牌依次升起就位
+      // 入场:各牌依次升起就位 + 光苞
       cardEls.forEach((c, i) => {
         if (c.slot.animate && !c.slot.classList.contains("cross")) {
           c.slot.animate([
             { transform: "translate(-50%,-50%) translateY(46px) scale(.55)", opacity: 0 },
             { transform: "translate(-50%,-50%) translateY(0) scale(1)", opacity: 1 }
-          ], { duration: 440, delay: i * 140, easing: "cubic-bezier(.2,.9,.3,1)", fill: "backwards" });
+          ], { duration: 440, delay: i * 150, easing: "cubic-bezier(.2,.9,.3,1)", fill: "backwards" });
         }
+        setTimeout(() => revealBurst(c.node), 220 + i * 150);
       });
-      const base = cardEls.length * 140 + 280;
-      cardEls.forEach((c, i) => setTimeout(() => { c.flip.classList.add("revealed"); revealBurst(c.flip); }, base + i * 480));
-      setTimeout(() => renderReadingText(s), base + cardEls.length * 480 + 380);
+      setTimeout(() => renderReadingText(s), cardEls.length * 150 + 520);
     } else {
-      cardEls.forEach(c => c.flip.classList.add("revealed"));
       renderReadingText(s);
     }
   }

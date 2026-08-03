@@ -175,24 +175,24 @@ h1,h2,h3{font-weight:600;}
 .pick-head{text-align:center;margin-bottom:8px;}
 .pick-hint{color:var(--ink-dim);font-size:14px;letter-spacing:1px;min-height:22px;}
 .pick-hint b{color:var(--gold-bright);}
-/* 候选牌:折叠向下的扇形 */
-.fan{position:relative;width:100%;max-width:840px;height:min(66vh,500px);margin:4px auto 0;perspective:1500px;}
+/* 候选牌:Z 字蛇形浅扇,从上折叠向下(完整 78 张) */
+.fan{position:relative;width:100%;max-width:940px;height:min(86vh,900px);margin:2px auto 0;
+  --pcw:82px;--pch:137px;}
 .fan-card{
-  position:absolute;left:50%;top:74%;
-  width:var(--card-w);height:var(--card-h);margin-left:calc(var(--card-w) / -2);
-  transform-origin:50% 152%;
-  transform:rotate(var(--ang)) translateY(230px);
+  position:absolute;left:var(--x);top:var(--y);
+  width:var(--pcw);height:var(--pch);
+  transform:translate(-50%,-50%) rotate(var(--rot)) translateY(200px);
   opacity:0;cursor:pointer;
-  transition:transform .32s cubic-bezier(.2,.85,.3,1),opacity .32s,filter .26s;
+  transition:transform .3s cubic-bezier(.2,.85,.3,1),opacity .3s,filter .24s;
   transition-delay:var(--delay);
 }
-.fan.dealt .fan-card{opacity:1;transform:rotate(var(--ang)) translateY(0);}
+.fan.dealt .fan-card{opacity:1;transform:translate(-50%,-50%) rotate(var(--rot)) translateY(0);}
 /* 铺开完成后取消错峰延迟 → 弹起/落下即时顺滑 */
 .fan.ready .fan-card{transition-delay:0s;}
-/* 悬停:沿卡片自身轴向"向上"抬出露约 3/4,保留与相邻牌的真实叠压(层级不变) */
+/* 悬停:沿卡片自身轴"向上"抬出露约 3/4,保留与相邻牌的真实叠压(层级不变) */
 .fan.ready .fan-card.peek{
-  transform:rotate(var(--ang)) translateY(-42%) scale(1.05);
-  filter:brightness(1.2) drop-shadow(0 0 16px rgba(231,200,106,.75));
+  transform:translate(-50%,-50%) rotate(var(--rot)) translateY(-52%) scale(1.14);
+  filter:brightness(1.22) drop-shadow(0 0 16px rgba(231,200,106,.8));
 }
 .pick-tip{color:var(--ink-dim);font-size:12.5px;letter-spacing:1px;margin:2px 0 6px;opacity:.85;}
 .fan-card .card-back{width:100%;height:100%;}
@@ -235,6 +235,12 @@ h1,h2,h3{font-weight:600;}
   font-size:11px;text-align:center;color:var(--gold-bright);
   background:linear-gradient(0deg,rgba(10,6,24,.9),transparent);letter-spacing:1px;}
 .flip-front.reversed .card-cap{transform:none;}
+/* 解读页正面牌(抽取时已揭示,直接展示正面) */
+.board-card{position:absolute;inset:0;border-radius:12px;overflow:hidden;
+  border:1.5px solid var(--gold);box-shadow:0 0 22px rgba(231,200,106,.4);}
+.board-card.reversed .card-img,.board-card.reversed .card-fallback{transform:rotate(180deg);}
+.board-card .card-cap{transform:none;}
+[data-theme="gothic"] .board-card{border-color:var(--gold);box-shadow:0 0 22px rgba(165,38,51,.4);}
 
 /* 翻牌光晕爆发 */
 .burst{position:absolute;inset:-30%;border-radius:50%;pointer-events:none;
@@ -321,8 +327,8 @@ h1,h2,h3{font-weight:600;}
 
 /* 选牌:元素化卡背;选中后原牌淡出(飞行副本由 JS 生成) */
 .fan-card .card-back{position:absolute;inset:0;}
-.fan-card.picked{opacity:0;transform:rotate(var(--ang)) translateY(-40px) scale(.6);
-  transition:opacity .45s ease, transform .45s ease;pointer-events:none;}
+.fan-card.picked{opacity:0;transform:translate(-50%,-50%) rotate(var(--rot)) scale(.55);
+  transition:opacity .4s ease, transform .4s ease;pointer-events:none;}
 
 /* 收集区(已抽取)——与候选牌分离 */
 .draw-zone{max-width:520px;margin:2px auto 6px;padding:10px 14px 4px;
@@ -362,6 +368,10 @@ h1,h2,h3{font-weight:600;}
 .card-back.mini .cb-emblem{font-size:1.1em;}
 .card-back.mini .cb-corner{width:6px;height:6px;}
 .card-back.mini::before{inset:3px;}
+/* 待选框内的正面小牌 */
+.tray-slot .tray-face{position:absolute;inset:0;border-radius:6px;overflow:hidden;}
+.tray-slot .tray-face img{width:100%;height:100%;object-fit:cover;display:block;}
+.tray-slot .tray-face.rev img{transform:rotate(180deg);}
 
 /* 翻牌:光芒爆发 + 弹跳 */
 .flip-card.revealed{animation:flipPop .8s ease;}
@@ -560,7 +570,7 @@ h1,h2,h3{font-weight:600;}
 @media(max-width:640px){
   :root{--card-w:92px;--card-h:154px;--rcard-w:108px;--rcard-h:180px;}
   .title{font-size:34px;letter-spacing:10px;}
-  .fan{height:300px;}
+  .fan{height:min(84vh,760px);--pcw:60px;--pch:100px;}
   .reading-item{gap:12px;padding:12px;}
   .reading-thumb{flex:0 0 80px;width:80px;height:134px;}
   .btn-primary,.btn-ghost{padding:11px 24px;font-size:15px;}
@@ -569,4 +579,5 @@ h1,h2,h3{font-weight:600;}
 @media(max-width:400px){
   :root{--card-w:80px;--card-h:134px;--rcard-w:94px;--rcard-h:157px;}
   .shuffle3d{--radius:100px;}
+  .fan{--pcw:52px;--pch:87px;}
 }
