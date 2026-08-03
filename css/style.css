@@ -304,16 +304,17 @@ h1,h2,h3{font-weight:600;}
 /* =========================================================
    高级抽卡:华丽卡背 + 抽卡飞行特效 + 收集托盘 + 翻牌光芒
    ========================================================= */
-.card-back{position:relative;width:100%;height:100%;border-radius:12px;overflow:hidden;
+.card-back{position:relative;width:100%;height:100%;border-radius:12px;overflow:hidden;color:var(--gold);
   background:
-    radial-gradient(circle at 50% 40%, rgba(231,200,106,.20), transparent 50%),
-    repeating-conic-gradient(from 0deg at 50% 40%, rgba(231,200,106,.055) 0deg 6deg, transparent 6deg 12deg),
+    radial-gradient(circle at 50% 50%, rgba(231,200,106,.15), transparent 54%),
     linear-gradient(160deg,#241858 0%,#130b30 55%,#0a0720 100%);
   border:1.5px solid var(--gold-dim);
   box-shadow:inset 0 0 24px rgba(0,0,0,.62), 0 0 12px rgba(90,60,170,.32);}
-.card-back::before{content:"";position:absolute;inset:5px;border-radius:8px;pointer-events:none;
-  border:1px solid rgba(231,200,106,.42);
-  box-shadow:inset 0 0 0 3px rgba(10,7,26,.55), inset 0 0 0 4px rgba(231,200,106,.16), inset 0 0 16px rgba(231,200,106,.12);}
+.card-back::before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:12px;
+  box-shadow:inset 0 0 20px rgba(0,0,0,.5);}
+/* 穆夏风格矢量花纹 */
+.cb-art{position:absolute;inset:0;width:100%;height:100%;color:var(--gold);
+  filter:drop-shadow(0 0 2px rgba(231,200,106,.25));}
 .cb-emblem{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   font-size:2.1em;color:var(--gold);text-shadow:0 0 14px rgba(231,200,106,.75);
   animation:cbPulse 3.4s ease-in-out infinite;}
@@ -489,13 +490,10 @@ h1,h2,h3{font-weight:600;}
 /* 卡背:暗红石壁 · 玫瑰花窗 · 十字 */
 [data-theme="gothic"] .card-back{
   background:
-    radial-gradient(circle at 50% 40%, rgba(165,38,51,.4), transparent 48%),
-    repeating-conic-gradient(from 0deg at 50% 40%, rgba(201,162,75,.06) 0deg 9deg, transparent 9deg 18deg),
+    radial-gradient(circle at 50% 50%, rgba(165,38,51,.36), transparent 54%),
     linear-gradient(160deg,#260c14 0%,#130609 60%,#050304 100%);
   border-color:var(--gold-dim);}
-[data-theme="gothic"] .card-back::before{
-  border-color:rgba(201,162,75,.44);
-  box-shadow:inset 0 0 0 3px rgba(8,4,6,.55), inset 0 0 0 4px rgba(201,162,75,.18), inset 0 0 16px rgba(165,38,51,.2);}
+[data-theme="gothic"] .card-back::before{box-shadow:inset 0 0 20px rgba(0,0,0,.55);}
 [data-theme="gothic"] .cb-emblem{color:var(--gold);text-shadow:0 0 14px rgba(165,38,51,.75);}
 [data-theme="gothic"] .cb-emblem::before{background:radial-gradient(circle, rgba(165,38,51,.32), transparent 62%);}
 [data-theme="gothic"] .cb-ring.r1{border-color:rgba(201,162,75,.32);}

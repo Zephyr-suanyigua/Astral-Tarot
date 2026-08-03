@@ -270,14 +270,34 @@
   //  场景四:扇形铺牌 + 选牌
   // ============================================================
   // 华丽的神秘光纹卡背(元素化,便于放大/复用)
+  // 穆夏(Art Nouveau)风格卡背:拱框 + 中央光环放射 + 四角藤蔓花草(内联 SVG 矢量勾线)
+  const CB_FLOURISH = "M24 74 C43 82 55 99 57 122 M57 122 C45 116 34 104 33 88 C44 93 54 104 57 122 " +
+    "M33 88 C28 80 27 70 30 61 M30 61 C36 66 40 74 40 84";
   function ornateBack() {
     const b = el("div", "card-back");
     b.innerHTML =
-      '<span class="cb-corner tl"></span><span class="cb-corner tr"></span>' +
-      '<span class="cb-corner bl"></span><span class="cb-corner br"></span>' +
-      '<span class="cb-ring r1"></span><span class="cb-ring r2"></span>' +
-      '<span class="cb-emblem">' + emblemChar() + '</span>' +
-      '<span class="cb-moon"></span>';
+      '<svg class="cb-art" viewBox="0 0 200 320" preserveAspectRatio="xMidYMid meet" aria-hidden="true">' +
+        '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">' +
+          '<rect x="9" y="9" width="182" height="302" rx="16" stroke-width="2"/>' +
+          '<rect x="15" y="15" width="170" height="290" rx="11" stroke-width="1" opacity=".5"/>' +
+          '<path d="M42 46 Q100 12 158 46" stroke-width="1.5" opacity=".85"/>' +
+          '<path d="M42 274 Q100 308 158 274" stroke-width="1.5" opacity=".85"/>' +
+          '<circle cx="100" cy="160" r="66" stroke-width="2"/>' +
+          '<circle cx="100" cy="160" r="59" stroke-width="1" opacity=".5"/>' +
+          '<circle cx="100" cy="160" r="40" stroke-width="1.2"/>' +
+          '<circle cx="100" cy="160" r="27" stroke-width="1" opacity=".7"/>' +
+          '<circle cx="100" cy="160" r="50" stroke-width="15" stroke-dasharray="1.5 7" opacity=".26"/>' +
+          '<path d="' + CB_FLOURISH + '" stroke-width="1.3" opacity=".85"/>' +
+          '<path d="' + CB_FLOURISH + '" stroke-width="1.3" opacity=".85" transform="translate(200,0) scale(-1,1)"/>' +
+          '<path d="' + CB_FLOURISH + '" stroke-width="1.3" opacity=".85" transform="translate(0,320) scale(1,-1)"/>' +
+          '<path d="' + CB_FLOURISH + '" stroke-width="1.3" opacity=".85" transform="translate(200,320) scale(-1,-1)"/>' +
+        '</g>' +
+        '<g fill="currentColor">' +
+          '<circle cx="100" cy="90" r="3"/><circle cx="100" cy="230" r="3"/>' +
+          '<circle cx="34" cy="160" r="2.4"/><circle cx="166" cy="160" r="2.4"/>' +
+        '</g>' +
+      '</svg>' +
+      '<span class="cb-emblem">' + emblemChar() + '</span>';
     return b;
   }
 
@@ -346,14 +366,14 @@
       wheel.appendChild(c);
     });
 
-    // 旋转状态 + 动态层级:越靠近顶部中央的牌层级越高,向两侧递减 → 叠压一致不乱
+    // 旋转状态 + 动态层级:沿角度单调递增(统一叠压方向),接缝落在屏幕外的底部 → 无"最上中央牌"
     let rot = 0;
     function updateZ() {
       const cards = wheel.children;
       for (let i = 0; i < cards.length; i++) {
-        let a = ((i * step + rot) % 360 + 360) % 360;   // 当前有效角度
-        if (a > 180) a -= 360;
-        cards[i].style.zIndex = String(1000 - Math.round(Math.abs(a)));
+        let a = ((i * step + rot) % 360 + 360) % 360;   // 0..360
+        if (a > 180) a -= 360;                           // -180..180(±180 = 底部,不可见)
+        cards[i].style.zIndex = String(1000 + Math.round(a)); // 右侧压左侧,连续一致
       }
     }
     const applyRot = () => { wheel.style.setProperty("--rot", rot.toFixed(2) + "deg"); updateZ(); };
